@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6415e844b6083c149a9b0602ed687f81, type: 3}
+  m_Name: PlayerLocomotionParameters_Preset
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerLocomotionPreset
+  normalAcceleration: 9.5
+  crouchAcceleration: 2.5
+  crouchSpeed: 0.85
+  walkSpeed: 1.45
+  runSpeed: 4.45
+  lookSensitivity: {x: 0.1, y: 0.1}
+  pitchUpLimit: 75
+  pitchDownLimit: 73
+  cameraWalkFOV: 57
+  cameraRunFOV: 62
+  cameraFOVSmoothing: 5
+  walkTiltAngle: 1
+  runTiltAngle: 2
+  tiltSmoothing: 3
+  gravityScale: 25
+  maxGravity: 300
+  rampingGravity: 10
