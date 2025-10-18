@@ -20,11 +20,11 @@ public class PlayerLocomotion : MonoBehaviour
     public float landingPauseTime = 0.4f;
 
     [Header("Crouching Parameters")]
-    public float standingHeight = 1.7f;
-    public float crouchingHeight = 1.2f;
-    public float crouchTransitionSpeed = 15f;
-    public float standingCenter = 0.85f;
-    public float crouchingCenter = 0.65f;
+    private float standingHeight = 1.7f;
+    private float crouchingHeight = 1.2f;
+    private float crouchTransitionSpeed = 15f;
+    private float standingCenter = 0.85f;
+    private float crouchingCenter = 0.65f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
 
