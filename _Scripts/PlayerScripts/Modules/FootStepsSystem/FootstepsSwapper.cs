@@ -25,13 +25,14 @@ public class FootstepsSwapper : MonoBehaviour
         layerFootstepMap.Add("3_Dirt", footstepsCollections[1]);
         layerFootstepMap.Add("4_PebblesDirt", footstepsCollections[1]);
         layerFootstepMap.Add("5_PebblesSmall", footstepsCollections[2]);
-        layerFootstepMap.Add("6_PebblesLarge", footstepsCollections[2]);
+        layerFootstepMap.Add("6_PebblesLarge", footstepsCollections[3]);
         layerFootstepMap.Add("7_Rock", footstepsCollections[3]);
     }
 
     public void CheckLayers()
     {
         RaycastHit hit;
+        Vector3 start = transform.position + Vector3.up * 1f;
         if (Physics.Raycast(transform.position, Vector3.down, out hit, 3))
         {
             if (hit.transform.GetComponent<Terrain>() != null)
@@ -54,6 +55,12 @@ public class FootstepsSwapper : MonoBehaviour
                     }
                 }
             }
+            if (hit.transform.GetComponent<SurfaceType>() != null)
+            {
+                FootstepsCollection collection = hit.transform.GetComponent<SurfaceType>().footstepsCollection;
+                currentTerrainLayer = collection.name;
+                footstepsHandler.SwapFootsteps(collection);
+            }
         }
     }
 
@@ -64,5 +71,4 @@ public class FootstepsSwapper : MonoBehaviour
             footstepsHandler.SwapFootsteps(collection);
         }
     }
-
 }

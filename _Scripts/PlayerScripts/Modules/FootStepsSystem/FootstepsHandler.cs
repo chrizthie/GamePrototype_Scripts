@@ -22,7 +22,7 @@ public class FootstepsHandler : MonoBehaviour
     [SerializeField] CharacterController characterController;
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] PlayerLocomotionPreset playerLocomotionPreset;
-    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioSource footstepAudioSource;
     [SerializeField] FootstepsSwapper footstepsSwapper;
 
     private void Start()
@@ -32,6 +32,17 @@ public class FootstepsHandler : MonoBehaviour
     }
     private void Update()
     {   
+        if (playerLocomotion.isCrouching)
+        {   
+            footstepAudioSource.pitch = 1.2f;
+            footstepAudioSource.volume = 0.2f;
+        }
+        else
+        {
+            footstepAudioSource.pitch = 1.1f;
+            footstepAudioSource.volume = 0.4f;
+        }
+
         // Adjust step interval based on player state
         if (playerLocomotion.isRunning && !playerLocomotion.isWalkingBackwards)
         {
@@ -92,29 +103,24 @@ public class FootstepsHandler : MonoBehaviour
             footstepsSwapper.UpdateFootstepType(playerLocomotion.isRunning);
 
             int n = Random.Range(1, footstepSounds.Count);
-            audioSource.clip = footstepSounds[n];
-            audioSource.PlayOneShot(audioSource.clip);
+            footstepAudioSource.clip = footstepSounds[n];
+            footstepAudioSource.PlayOneShot(footstepAudioSource.clip);
             // Move picked sound to index 0 so it's not picked next time
             footstepSounds[n] = footstepSounds[0];
-            footstepSounds[0] = audioSource.clip;
+            footstepSounds[0] = footstepAudioSource.clip;
         }
     }
 
     private void PlayLandingAudio()
     {
         footstepsSwapper.CheckLayers();
-        audioSource.PlayOneShot(landingClip);
+        footstepAudioSource.PlayOneShot(landingClip);
     }
 
     public void SwapFootsteps(FootstepsCollection collection)
     {
         footstepSounds.Clear();
-        //for (int i = 0; i < collection.footstepSounds.Count; i++)
-        {
-            //footstepSounds.Add(collection.footstepSounds[i]);
-        }
-
-        // Choose correct variation based on movement
+   
         if (playerLocomotion.isRunning)
         {
             for (int i = 0; i < collection.runFootstepSounds.Count; i++)
@@ -150,9 +156,9 @@ public class FootstepsHandler : MonoBehaviour
             playerLocomotion = FindAnyObjectByType<PlayerLocomotion>();
         }
 
-        if (audioSource == null)
+        if (footstepAudioSource == null)
         {
-            audioSource = GetComponent<AudioSource>();
+            footstepAudioSource = GetComponent<AudioSource>();
         }
 
         if (footstepsSwapper == null)

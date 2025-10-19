@@ -17,14 +17,14 @@ public class PlayerLocomotion : MonoBehaviour
 
     [Header("Landing Parameters")]
     public bool isMovementPaused = false;
-    public float landingPauseTime = 0.4f;
+    public float landingPauseTime = 0.5f;
 
     [Header("Crouching Parameters")]
     private float standingHeight = 1.7f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
-    private float standingCenter = 0.85f;
-    private float crouchingCenter = 0.65f;
+    public float standingCenter = 0.845f;
+    public float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
 
@@ -176,7 +176,8 @@ public class PlayerLocomotion : MonoBehaviour
 
         // crouching transition
         if (isCrouching)
-        {
+        {   
+
             if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
                 animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
             {
