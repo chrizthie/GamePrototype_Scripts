@@ -23,10 +23,13 @@ public class PlayerLocomotion : MonoBehaviour
     private float standingHeight = 1.7f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
-    public float standingCenter = 0.845f;
-    public float crouchingCenter = 0.595f;
+    private float standingCenter = 0.845f;
+    private float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
+    public float checkRadius = 0.25f; // width of the check sphere
+    public float checkDistance = 0.5f; // how far above head to check
+    public LayerMask obstacleMask;
 
     [Header("Movement Flags")]
     public bool inPlace;
@@ -174,40 +177,6 @@ public class PlayerLocomotion : MonoBehaviour
             maxSpeed = preset.walkSpeed;
         }
 
-        // crouching transition
-        if (isCrouching)
-        {   
-
-            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
-                animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
-            {
-                // center transition
-                Vector3 center = characterController.center;
-                center.y = crouchingCenter;
-                characterController.center = center;
-                // height transition
-                characterController.height = Mathf.Lerp(characterController.height, crouchingHeight, crouchTransitionSpeed * Time.deltaTime);
-                maxAcceleration = preset.crouchAcceleration;
-            }
-
-            
-        }
-        else
-        {
-            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
-                animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
-            {
-                // center transition
-                Vector3 center = characterController.center;
-                center.y = standingCenter;
-                characterController.center = center;
-                // height transition
-                characterController.height = Mathf.Lerp(characterController.height, standingHeight, crouchTransitionSpeed * Time.deltaTime);
-                maxAcceleration = preset.normalAcceleration;
-            }
-            
-        }
-
         // accelerate to target speed
         if (motion.sqrMagnitude >= 0.01f)
         {
@@ -244,6 +213,42 @@ public class PlayerLocomotion : MonoBehaviour
 
         // updating speed
         currentSpeed = currentVelocity.magnitude;
+    }
+
+    private void Crouch()
+    {
+        if (isCrouching)
+        {
+            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
+                animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
+            {
+                // center transition
+                Vector3 center = characterController.center;
+                center.y = crouchingCenter;
+                characterController.center = center;
+                // height transition
+                characterController.height = Mathf.Lerp(characterController.height, crouchingHeight, crouchTransitionSpeed * Time.deltaTime);
+                maxAcceleration = preset.crouchAcceleration;
+            }
+        }
+    }
+
+    private void StandUp()
+    {
+        if(!isCrouching)
+        {
+            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
+                animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
+            {
+                // center transition
+                Vector3 center = characterController.center;
+                center.y = standingCenter;
+                characterController.center = center;
+                // height transition
+                characterController.height = Mathf.Lerp(characterController.height, standingHeight, crouchTransitionSpeed * Time.deltaTime);
+                maxAcceleration = preset.normalAcceleration;
+            }
+        }
     }
 
     private void PlayerLanding()
@@ -346,6 +351,8 @@ public class PlayerLocomotion : MonoBehaviour
         {
             MoveUpdate();
         }
+        Crouch();
+        StandUp();
 
         MovementFlags();
         PlayerLanding();
