@@ -14,6 +14,7 @@ public class PlayerLocomotion : MonoBehaviour
     public float maxAcceleration;
     public bool canMove = true;
     public bool canRun;
+    public bool obstacleOverhead = false;
 
     [Header("Landing Parameters")]
     public bool isMovementPaused = false;
@@ -27,8 +28,9 @@ public class PlayerLocomotion : MonoBehaviour
     private float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
+    public Transform headPoint;
     public float checkRadius = 0.25f; // width of the check sphere
-    public float checkDistance = 0.5f; // how far above head to check
+    public float checkDistance = 0.4f; // how far above head to check
     public LayerMask obstacleMask;
 
     [Header("Movement Flags")]
@@ -233,6 +235,26 @@ public class PlayerLocomotion : MonoBehaviour
         }
     }
 
+    private void CheckOverhead()
+    {
+        if (headPoint == null)
+            headPoint = transform; // fallback
+
+        // Perform spherecast upwards
+        if (Physics.SphereCast(headPoint.position, checkRadius, Vector3.up, out RaycastHit hit, checkDistance, obstacleMask))
+        {
+            obstacleOverhead = true;
+        }
+        else
+        {
+            obstacleOverhead = false;
+        }
+
+        // Debug visualization
+        Color color = obstacleOverhead ? Color.red : Color.green;
+        Debug.DrawRay(headPoint.position, Vector3.up * checkDistance, color);
+    }
+
     private void StandUp()
     {
         if(!isCrouching)
@@ -352,6 +374,7 @@ public class PlayerLocomotion : MonoBehaviour
             MoveUpdate();
         }
         Crouch();
+        CheckOverhead();
         StandUp();
 
         MovementFlags();

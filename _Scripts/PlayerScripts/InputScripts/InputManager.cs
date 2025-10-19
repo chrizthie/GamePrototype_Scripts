@@ -27,7 +27,7 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         // Running input
-        if (runAction.IsPressed() && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
+        if (runAction.IsPressed() && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
         {
             Debug.Log("Running...");
             playerLocomotion.runInput = true;
@@ -51,14 +51,16 @@ public class InputManager : MonoBehaviour
 
     private void OnCrouch(InputValue value)
     {
-        //if (value.isPressed && !playerLocomotion.isRunning)
-        {
-            //playerLocomotion.crouchInput = !playerLocomotion.crouchInput;
-        }
-        // Only proceed if input was pressed and player isn't running
         if (value.isPressed && !playerLocomotion.isRunning)
         {
-            // Check if enough time has passed since last crouch
+            // Prevent standing up if crouched and blocked overhead
+            if (playerLocomotion.isCrouching && playerLocomotion.obstacleOverhead)
+            {
+                // Stay crouched, do nothing
+                return;
+            }
+
+            // Check cooldown before toggling crouch
             if (Time.time - lastCrouchTime >= crouchCooldown)
             {
                 playerLocomotion.crouchInput = !playerLocomotion.crouchInput;
