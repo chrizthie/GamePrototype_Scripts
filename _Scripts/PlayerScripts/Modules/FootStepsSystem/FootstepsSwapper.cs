@@ -3,12 +3,15 @@ using UnityEngine;
 
 public class FootstepsSwapper : MonoBehaviour
 {
+    [Header("Footsteps Parameters")]
+    [SerializeField] public FootstepsCollection[] footstepsCollections;
+    [SerializeField] private string currentTerrainLayer;
+    [SerializeField] private Dictionary<string, FootstepsCollection> layerFootstepMap = new Dictionary<string, FootstepsCollection>();
     [SerializeField] private TerrainChecker terrainChecker;
+
+    [Header("Required Components")]
     [SerializeField] private FootstepsHandler footstepsHandler;
-    private string currentTerrainLayer;
     
-    public FootstepsCollection[] footstepsCollections;
-    private Dictionary<string, FootstepsCollection> layerFootstepMap = new Dictionary<string, FootstepsCollection>();
 
     void Start()
     {

@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class BlockAheadDetection : MonoBehaviour
 {
-    public bool blocked;
-
-    public float rayDistance = 0.4f;      // how far forward to check
-    public LayerMask hitMask;           // which layers the ray can hit
+    [Header("Detection Parameters")]
+    [SerializeField] public bool blocked;
+    [SerializeField] private float rayDistance = 0.4f;      // how far forward to check
+    [SerializeField] private LayerMask hitMask;           // which layers the ray can hit
 
     private void Update()
     {

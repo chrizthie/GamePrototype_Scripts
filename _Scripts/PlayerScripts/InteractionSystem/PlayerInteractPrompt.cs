@@ -5,8 +5,8 @@ using TMPro;
 
 public class PlayerUI : MonoBehaviour
 {
-    [SerializeField]
-    private TextMeshProUGUI promptText;
+    [Header("Required Components")]
+    [SerializeField] private TextMeshProUGUI promptText;
 
     void Start()
     {

@@ -7,19 +7,15 @@ using UnityEngine;
 
 public class PlayerInteract : MonoBehaviour
 {
-    [SerializeField]
-    private float distance = 1.2f;
+    [Header("Interact Parameters")]
+    [SerializeField] public bool interactableDetected;
+    [SerializeField] private float distance = 1.2f;
+    [SerializeField] private LayerMask interactableMask;
+    [SerializeField] private PlayerUI playerUI;
 
-    [SerializeField]
-    private LayerMask interactableMask;
-    private PlayerUI playerUI;
-
-    [SerializeField]
-    public bool interactableDetected;
-    public GameObject circleCrosshair;
-    public GameObject handCrosshair;
-
-    [Header("Components")]
+    [Header("Required Components")]
+    [SerializeField] private GameObject circleCrosshair;
+    [SerializeField] private GameObject handCrosshair;
     [SerializeField] Camera mainCamera;
     [SerializeField] InputManager inputManager;
 

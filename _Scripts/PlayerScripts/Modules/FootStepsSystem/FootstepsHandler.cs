@@ -4,21 +4,20 @@ using System.Collections.Generic;
 [RequireComponent(typeof(AudioSource))]
 public class FootstepsHandler : MonoBehaviour
 {
+    [Header("Footsteps Collections")]
     [SerializeField] private List<AudioClip> footstepSounds = new List<AudioClip>(); // List of footstep sounds
     [SerializeField] private AudioClip landingClip; // Sound played when landing
 
+    [Header("Footsteps Parameters")]
     [SerializeField] [Range(0f, 1f)] private float m_RunStepLengthen; // How much faster the character runs compared to walking
     [SerializeField] private float m_StepInterval; // Base time interval between steps
+    [SerializeField] private float m_StepCycle; // Time interval between steps
+    [SerializeField] private float m_NextStep;
+    [SerializeField] private float crouchStepSpeed = 1.75f;// crouch walk
+    [SerializeField] private float walkStepSpeed = 1.85f; // all walk
+    [SerializeField] private float runStepSpeed = 3f; // run forward only
 
-    private float m_StepCycle; // Time interval between steps
-    private float m_NextStep;
-
-    public float crouchStepSpeed = 1.75f;// crouch walk
-    public float walkStepSpeed = 1.85f; // all walk
-    public float runStepSpeed = 3f; // run forward only
-
-
-    [Header("Components")]
+    [Header("Required Components")]
     [SerializeField] CharacterController characterController;
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] PlayerLocomotionPreset playerLocomotionPreset;

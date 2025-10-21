@@ -8,10 +8,6 @@ public class InputManager : MonoBehaviour
 {
     public InputSystem_Actions playerInputs;
 
-    [Header("Components")]
-    [SerializeField] PlayerLocomotion playerLocomotion;
-    [SerializeField] FlashlightHandler flashlightHandler;
-
     [Header("Input Cooldowns")]
     // flashlight
     public bool canFlashlightTurn = true;
@@ -20,7 +16,12 @@ public class InputManager : MonoBehaviour
     private float lastCrouchTime = 0f;
     private float crouchCooldown = 0.5f;
 
+    [Header("Input in Update")]
     [SerializeField] private InputAction runAction;
+
+    [Header("Required Components")]
+    [SerializeField] PlayerLocomotion playerLocomotion;
+    [SerializeField] FlashlightHandler flashlightHandler;
 
     #region Input Handling
 

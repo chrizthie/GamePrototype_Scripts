@@ -21,6 +21,8 @@ public class PlayerLocomotion : MonoBehaviour
     public float landingPauseTime = 0.5f;
 
     [Header("Crouching Parameters")]
+    public Transform headPoint;
+    public LayerMask obstacleMask;
     private float standingHeight = 1.7f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
@@ -28,10 +30,8 @@ public class PlayerLocomotion : MonoBehaviour
     private float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
-    public Transform headPoint;
-    public float checkRadius = 0.25f; // width of the check sphere
-    public float checkDistance = 0.4f; // how far above head to check
-    public LayerMask obstacleMask;
+    private float checkRadius = 0.25f; // width of the check sphere
+    private float checkDistance = 0.4f; // how far above head to check
 
     [Header("Movement Flags")]
     public bool inPlace;
@@ -43,9 +43,9 @@ public class PlayerLocomotion : MonoBehaviour
 
 
     [Header("Looking Parameters")]
-    [SerializeField] float currentPitch = 0f;
-    [SerializeField] public float currentTilt = 0f;
-    [SerializeField] public float maxTiltAngle;
+    public float maxTiltAngle;
+    private float currentPitch = 0f;
+    private float currentTilt = 0f;
 
     public float CurrentPitch
     {
@@ -70,12 +70,12 @@ public class PlayerLocomotion : MonoBehaviour
     public bool crouchInput;
     public bool isFlashlightOn = false;
 
-    [Header("Components")]
+    [Header("Required Components")]
     [SerializeField] CinemachineCamera firstPersonCamera;
     [SerializeField] CharacterController characterController;
     [SerializeField] Animator animator;
 
-    [Header("Player Modules")]
+    [Header("Required Player Modules")]
     [SerializeField] BlockAheadDetection blockAheadDetection;
     [SerializeField] FootstepsHandler footstepsHandler;
 
