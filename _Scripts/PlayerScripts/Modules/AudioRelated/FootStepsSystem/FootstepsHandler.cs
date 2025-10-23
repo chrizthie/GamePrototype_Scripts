@@ -6,6 +6,7 @@ public class FootstepsHandler : MonoBehaviour
 {
     [Header("Footsteps Collections")]
     [SerializeField] private List<AudioClip> footstepSounds = new List<AudioClip>(); // List of footstep sounds
+    [SerializeField] private List<AudioClip> landingVoiceSounds = new List<AudioClip>(); // Voice collection played when landing
     [SerializeField] private AudioClip landingClip; // Sound played when landing
 
     [Header("Footsteps Parameters")]
@@ -22,6 +23,7 @@ public class FootstepsHandler : MonoBehaviour
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] PlayerLocomotionPreset playerLocomotionPreset;
     [SerializeField] AudioSource footstepAudioSource;
+    [SerializeField] AudioSource voiceAudioSource;
     [SerializeField] FootstepsSwapper footstepsSwapper;
 
     #region Steps Cycles & Audio Methods
@@ -69,6 +71,17 @@ public class FootstepsHandler : MonoBehaviour
     {
         footstepsSwapper.CheckLayers();
         footstepAudioSource.PlayOneShot(landingClip);
+        PlayLandingVoiceAudio();
+    }
+
+    private void PlayLandingVoiceAudio()
+    {
+        int n = Random.Range(1, landingVoiceSounds.Count);
+        voiceAudioSource.clip = landingVoiceSounds[n];
+        voiceAudioSource.PlayOneShot(voiceAudioSource.clip);
+        // Move picked sound to index 0 so it's not picked next time
+        landingVoiceSounds[n] = landingVoiceSounds[0];
+        landingVoiceSounds[0] = voiceAudioSource.clip;
     }
 
     public void SwapFootsteps(FootstepsCollection collection)
