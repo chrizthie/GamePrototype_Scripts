@@ -6,8 +6,6 @@ using System;
 [RequireComponent(typeof(PlayerLocomotion))]
 public class InputManager : MonoBehaviour
 {
-    public InputSystem_Actions playerInputs;
-
     [Header("Input Cooldowns")]
     // flashlight
     public bool canFlashlightTurn = true;
@@ -17,9 +15,10 @@ public class InputManager : MonoBehaviour
     private float crouchCooldown = 0.5f;
 
     [Header("Input in Update")]
-    [SerializeField] private InputAction runAction;
+    [SerializeField] public InputAction runAction;
 
     [Header("Required Components")]
+    [SerializeField] public InputSystem_Actions playerInputs;
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] FlashlightHandler flashlightHandler;
 
@@ -108,7 +107,7 @@ public class InputManager : MonoBehaviour
 
         if (flashlightHandler == null)
         {
-            flashlightHandler = GetComponent<FlashlightHandler>();
+            flashlightHandler = FindAnyObjectByType<FlashlightHandler>();
         }
     }
 

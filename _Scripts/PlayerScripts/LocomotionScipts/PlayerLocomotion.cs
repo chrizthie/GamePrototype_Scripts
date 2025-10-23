@@ -7,8 +7,6 @@ using System;
 
 public class PlayerLocomotion : MonoBehaviour
 {
-    public PlayerLocomotionPreset preset;
-
     [Header("Movement Parameters")]
     public float maxSpeed;
     public float maxAcceleration;
@@ -41,7 +39,6 @@ public class PlayerLocomotion : MonoBehaviour
     public bool isRunning;
     public bool isCrouching;
 
-
     [Header("Looking Parameters")]
     public float maxTiltAngle;
     private float currentPitch = 0f;
@@ -71,6 +68,7 @@ public class PlayerLocomotion : MonoBehaviour
     public bool isFlashlightOn = false;
 
     [Header("Required Components")]
+    [SerializeField] PlayerLocomotionPreset preset;
     [SerializeField] CinemachineCamera firstPersonCamera;
     [SerializeField] CharacterController characterController;
     [SerializeField] Animator animator;
@@ -356,12 +354,12 @@ public class PlayerLocomotion : MonoBehaviour
         // modules
         if (blockAheadDetection == null)
         {
-            blockAheadDetection = FindFirstObjectByType<BlockAheadDetection>();
+            blockAheadDetection = GetComponentInChildren<BlockAheadDetection>();
         }
 
         if (footstepsHandler == null)
         {
-            footstepsHandler = FindFirstObjectByType<FootstepsHandler>();
+            footstepsHandler = GetComponentInChildren<FootstepsHandler>();
         }
     }
 

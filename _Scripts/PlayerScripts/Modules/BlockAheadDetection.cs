@@ -4,8 +4,8 @@ public class BlockAheadDetection : MonoBehaviour
 {
     [Header("Detection Parameters")]
     [SerializeField] public bool blocked;
-    [SerializeField] private float rayDistance = 0.4f;      // how far forward to check
-    [SerializeField] private LayerMask hitMask;           // which layers the ray can hit
+    [SerializeField] float rayDistance = 0.4f;      // how far forward to check
+    [SerializeField] LayerMask hitMask;           // which layers the ray can hit
 
     private void Update()
     {

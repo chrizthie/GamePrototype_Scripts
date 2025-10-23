@@ -63,7 +63,6 @@ public class FootstepsHandler : MonoBehaviour
         }
     }
 
-    
     private void FixedUpdate()
     {
         ProgressStepCycle(speed: playerLocomotion.isRunning ? playerLocomotionPreset.runSpeed : playerLocomotionPreset.walkSpeed);
@@ -146,13 +145,13 @@ public class FootstepsHandler : MonoBehaviour
     {
         if (characterController == null)
         {
-            characterController = FindAnyObjectByType<CharacterController>();
+            characterController = GetComponentInParent<CharacterController>();
 
         }
 
         if (playerLocomotion == null)
         {
-            playerLocomotion = FindAnyObjectByType<PlayerLocomotion>();
+            playerLocomotion = GetComponentInParent<PlayerLocomotion>();
         }
 
         if (footstepAudioSource == null)
