@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -21,15 +22,14 @@ public class StaminaSystem : MonoBehaviour
 
     [Header("Required Components")]
     [SerializeField] Image staminaBar;
-    [SerializeField] PlayerLocomotion playerLocomotion;
+    [SerializeField] TextMeshProUGUI staminaTitle;
     [SerializeField] PlayerLocomotionPreset preset;
+    [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] InputManager inputManager;
-    //[SerializeField] InputSystem_Actions playerInputs;
-    //[SerializeField] InputAction runAction;
 
     private void Update()
     {
-        staminaBar.fillAmount = playerStamina / maxStamina;
+        //staminaBar.fillAmount = playerStamina / maxStamina;
 
         if (inputManager.runAction.triggered)
         {
@@ -45,7 +45,9 @@ public class StaminaSystem : MonoBehaviour
             HandleRegenStamina();
         }
 
-        HandleNoStamina();
+        //HandleNoStamina();
+
+        UpdateStaminaDisplay();
     }
 
     private void HandleDegenStamina()
@@ -104,29 +106,25 @@ public class StaminaSystem : MonoBehaviour
         }
     }
 
+    private void UpdateStaminaDisplay()
+    {
+        //staminaTitle.text = ((int)playerStamina).ToString();
+    }
+
     #region Unity Methods
 
-    private void OnEnable()
+    private void OnValidate()
     {
-        
-    }
+        if (playerLocomotion == null)
+        {
+            playerLocomotion = GetComponentInParent<PlayerLocomotion>();
+        }
 
-    private void OnDisable()
-    {
-        
+        if (inputManager == null)
+        {
+            inputManager = GetComponentInParent<InputManager>();
+        }
     }
-
-    private void Awake()
-    {
-        playerLocomotion = GetComponentInParent<PlayerLocomotion>();
-        inputManager = GetComponentInParent<InputManager>();
-    }
-
-    private void Start()
-    {
-        
-    }
-
 
     #endregion 
 }

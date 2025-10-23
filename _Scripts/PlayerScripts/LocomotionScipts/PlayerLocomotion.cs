@@ -69,6 +69,7 @@ public class PlayerLocomotion : MonoBehaviour
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotionPreset preset;
+    [SerializeField] StaminaSystem staminaSystem;
     [SerializeField] CinemachineCamera firstPersonCamera;
     [SerializeField] CharacterController characterController;
     [SerializeField] Animator animator;
@@ -164,7 +165,7 @@ public class PlayerLocomotion : MonoBehaviour
         motion.Normalize();
 
         // determine max speed
-        if (runInput && canRun == true && !isWalkingBackwards)
+        if (runInput && canRun == true && !isWalkingBackwards && staminaSystem.playerStamina != 0)
         {
             maxSpeed = preset.runSpeed;
         }
@@ -352,6 +353,11 @@ public class PlayerLocomotion : MonoBehaviour
         }
 
         // modules
+        if (staminaSystem == null)
+        {
+            staminaSystem = GetComponentInChildren<StaminaSystem>();
+        }
+
         if (blockAheadDetection == null)
         {
             blockAheadDetection = GetComponentInChildren<BlockAheadDetection>();
