@@ -2,15 +2,29 @@ using UnityEngine;
 
 public class PlayerBreathing : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [Header("Breathing Audio Clips")]
+    [SerializeField] AudioClip normalBreathing;
+    [SerializeField] AudioClip moderateBreathing;
+    [SerializeField] AudioClip heavyBreathing;
+
+    [Header("Required Components")]
+    [SerializeField] StaminaSystem staminaSystem;
+    [SerializeField] AudioSource breathAudioSource;
+
+    #region Unity Methods 
+
+    private void Update()
     {
         
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnValidate()
     {
-        
+        if (staminaSystem == null)
+        {
+            staminaSystem = GetComponentInParent<StaminaSystem>();
+        }
     }
+
+    #endregion
 }

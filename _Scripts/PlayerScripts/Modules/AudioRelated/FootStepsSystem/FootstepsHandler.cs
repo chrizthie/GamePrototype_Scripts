@@ -1,12 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 [RequireComponent(typeof(AudioSource))]
 public class FootstepsHandler : MonoBehaviour
 {
     [Header("Footsteps Collections")]
     [SerializeField] private List<AudioClip> footstepSounds = new List<AudioClip>(); // List of footstep sounds
-    [SerializeField] private List<AudioClip> landingVoiceSounds = new List<AudioClip>(); // Voice collection played when landing
     [SerializeField] private AudioClip landingClip; // Sound played when landing
 
     [Header("Footsteps Parameters")]
@@ -22,8 +22,9 @@ public class FootstepsHandler : MonoBehaviour
     [SerializeField] CharacterController characterController;
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] PlayerLocomotionPreset playerLocomotionPreset;
+    [SerializeField] PlayerVoice playerVoice;
     [SerializeField] AudioSource footstepAudioSource;
-    [SerializeField] AudioSource voiceAudioSource;
+    
     [SerializeField] FootstepsSwapper footstepsSwapper;
 
     #region Steps Cycles & Audio Methods
@@ -71,17 +72,7 @@ public class FootstepsHandler : MonoBehaviour
     {
         footstepsSwapper.CheckLayers();
         footstepAudioSource.PlayOneShot(landingClip);
-        PlayLandingVoiceAudio();
-    }
-
-    private void PlayLandingVoiceAudio()
-    {
-        int n = Random.Range(1, landingVoiceSounds.Count);
-        voiceAudioSource.clip = landingVoiceSounds[n];
-        voiceAudioSource.PlayOneShot(voiceAudioSource.clip);
-        // Move picked sound to index 0 so it's not picked next time
-        landingVoiceSounds[n] = landingVoiceSounds[0];
-        landingVoiceSounds[0] = voiceAudioSource.clip;
+        playerVoice.PlayLandingGruntAudio();
     }
 
     public void SwapFootsteps(FootstepsCollection collection)
@@ -123,14 +114,14 @@ public class FootstepsHandler : MonoBehaviour
             playerLocomotion = GetComponentInParent<PlayerLocomotion>();
         }
 
-        if (footstepAudioSource == null)
-        {
-            footstepAudioSource = GetComponent<AudioSource>();
-        }
-
         if (footstepsSwapper == null)
         {
             footstepsSwapper = GetComponent<FootstepsSwapper>();
+        }
+
+        if (playerVoice == null)
+        {
+            playerVoice = GetComponent<PlayerVoice>();
         }
     }
 
