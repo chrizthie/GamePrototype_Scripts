@@ -12,26 +12,6 @@ public class FootstepsSwapper : MonoBehaviour
     [Header("Required Components")]
     [SerializeField] private FootstepsHandler footstepsHandler;
     
-
-    void Start()
-    {
-        terrainChecker = new TerrainChecker();
-        footstepsHandler = GetComponent<FootstepsHandler>();
-    }
-
-    private void Awake()
-    {
-        // Example mapping: assign terrain layer names to specific collections
-        layerFootstepMap.Add("0_LushGrass", footstepsCollections[0]);
-        layerFootstepMap.Add("1_DryGrass", footstepsCollections[0]);
-        layerFootstepMap.Add("2_Moss", footstepsCollections[0]);
-        layerFootstepMap.Add("3_Dirt", footstepsCollections[1]);
-        layerFootstepMap.Add("4_PebblesDirt", footstepsCollections[1]);
-        layerFootstepMap.Add("5_PebblesSmall", footstepsCollections[2]);
-        layerFootstepMap.Add("6_PebblesLarge", footstepsCollections[3]);
-        layerFootstepMap.Add("7_Rock", footstepsCollections[3]);
-    }
-
     public void CheckLayers()
     {
         RaycastHit hit;
@@ -74,4 +54,33 @@ public class FootstepsSwapper : MonoBehaviour
             footstepsHandler.SwapFootsteps(collection);
         }
     }
+
+    #region Unity Methods
+
+    private void OnValidate()
+    {
+        if (footstepsHandler == null)
+        {
+            footstepsHandler = GetComponent<FootstepsHandler>();
+        }
+    }
+
+    private void Awake()
+    {
+        // Example mapping: assign terrain layer names to specific collections
+        layerFootstepMap.Add("0_LushGrass", footstepsCollections[0]);
+        layerFootstepMap.Add("1_DryGrass", footstepsCollections[0]);
+        layerFootstepMap.Add("2_Moss", footstepsCollections[0]);
+        layerFootstepMap.Add("3_Dirt", footstepsCollections[1]);
+        layerFootstepMap.Add("4_PebblesDirt", footstepsCollections[1]);
+        layerFootstepMap.Add("5_PebblesSmall", footstepsCollections[2]);
+        layerFootstepMap.Add("6_PebblesLarge", footstepsCollections[3]);
+        layerFootstepMap.Add("7_Rock", footstepsCollections[3]);
+    }
+
+    private void Start()
+    {
+        terrainChecker = new TerrainChecker();
+    }
+    #endregion
 }

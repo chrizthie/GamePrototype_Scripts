@@ -11,8 +11,8 @@ public class FootstepsHandler : MonoBehaviour
     [Header("Footsteps Parameters")]
     [SerializeField] [Range(0f, 1f)] private float m_RunStepLengthen; // How much faster the character runs compared to walking
     [SerializeField] private float m_StepInterval; // Base time interval between steps
-    [SerializeField] private float m_StepCycle; // Time interval between steps
-    [SerializeField] private float m_NextStep;
+    private float m_StepCycle; 
+    private float m_NextStep;
     [SerializeField] private float crouchStepSpeed = 1.75f;// crouch walk
     [SerializeField] private float walkStepSpeed = 1.85f; // all walk
     [SerializeField] private float runStepSpeed = 3f; // run forward only
@@ -23,50 +23,6 @@ public class FootstepsHandler : MonoBehaviour
     [SerializeField] PlayerLocomotionPreset playerLocomotionPreset;
     [SerializeField] AudioSource footstepAudioSource;
     [SerializeField] FootstepsSwapper footstepsSwapper;
-
-    private void Start()
-    {
-        m_StepCycle = 0f;
-        m_NextStep = m_StepCycle / 2f;
-    }
-    private void Update()
-    {   
-        if (playerLocomotion.isCrouching)
-        {   
-            footstepAudioSource.pitch = 1.2f;
-            footstepAudioSource.volume = 0.2f;
-        }
-        else
-        {
-            footstepAudioSource.pitch = 1.1f;
-            footstepAudioSource.volume = 0.4f;
-        }
-
-        // Adjust step interval based on player state
-        if (playerLocomotion.isRunning && !playerLocomotion.isWalkingBackwards)
-        {
-            m_StepInterval = runStepSpeed;
-        }
-        else if (playerLocomotion.isCrouching)
-        {
-            m_StepInterval = crouchStepSpeed;
-        }
-        else
-        {
-            m_StepInterval = walkStepSpeed;
-        }
-
-        // Landing sound
-        if (characterController.isGrounded && playerLocomotion.airTime > 0.3f)
-        {
-            PlayLandingAudio();
-        }
-    }
-
-    private void FixedUpdate()
-    {
-        ProgressStepCycle(speed: playerLocomotion.isRunning ? playerLocomotionPreset.runSpeed : playerLocomotionPreset.walkSpeed);
-    }
 
     #region Steps Cycles & Audio Methods
 
@@ -164,6 +120,52 @@ public class FootstepsHandler : MonoBehaviour
             footstepsSwapper = GetComponent<FootstepsSwapper>();
         }
     }
+
+    private void Start()
+    {
+        m_StepCycle = 0f;
+        m_NextStep = m_StepCycle / 2f;
+    }
+
+    private void Update()
+    {   
+        if (playerLocomotion.isCrouching)
+        {   
+            footstepAudioSource.pitch = 1.2f;
+            footstepAudioSource.volume = 0.2f;
+        }
+        else
+        {
+            footstepAudioSource.pitch = 1.1f;
+            footstepAudioSource.volume = 0.4f;
+        }
+
+        // Adjust step interval based on player state
+        if (playerLocomotion.isRunning && !playerLocomotion.isWalkingBackwards)
+        {
+            m_StepInterval = runStepSpeed;
+        }
+        else if (playerLocomotion.isCrouching)
+        {
+            m_StepInterval = crouchStepSpeed;
+        }
+        else
+        {
+            m_StepInterval = walkStepSpeed;
+        }
+
+        // Landing sound
+        if (characterController.isGrounded && playerLocomotion.airTime > 0.3f)
+        {
+            PlayLandingAudio();
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        ProgressStepCycle(speed: playerLocomotion.isRunning ? playerLocomotionPreset.runSpeed : playerLocomotionPreset.walkSpeed);
+    }
+
 
     #endregion
 }
