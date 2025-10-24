@@ -5,6 +5,7 @@ public class PlayerBreathing : MonoBehaviour
 {
     [Header("Audio Settings")]
     [Range(0.1f, 2f)] public float fadeDuration = 0.5f;
+    [Range(0f, 1f)] public float targetVolume = 0.6f;
 
     [Header("Breathing Audio Clips")]
     [SerializeField] AudioClip normalBreathing;
@@ -55,26 +56,30 @@ public class PlayerBreathing : MonoBehaviour
     {
         float startVolume = breathingAudioSource.volume;
 
-        // Fade out
-        for (float t = 0; t < fadeDuration; t += Time.deltaTime)
+        // fade out
+        for (float t = 0f; t < fadeDuration; t += Time.deltaTime)
         {
             breathingAudioSource.volume = Mathf.Lerp(startVolume, 0f, t / fadeDuration);
             yield return null;
         }
 
+        // ensure it’s at 0
         breathingAudioSource.volume = 0f;
+
+        // change clip
         breathingAudioSource.clip = newClip;
         breathingAudioSource.loop = true;
         breathingAudioSource.Play();
 
-        // Fade in
-        for (float t = 0; t < fadeDuration; t += Time.deltaTime)
+        // fade in from 0 to targetVolume
+        for (float t = 0f; t < fadeDuration; t += Time.deltaTime)
         {
-            breathingAudioSource.volume = Mathf.Lerp(0f, startVolume, t / fadeDuration);
+            breathingAudioSource.volume = Mathf.Lerp(0f, targetVolume, t / fadeDuration);
             yield return null;
         }
 
-        breathingAudioSource.volume = startVolume;
+        breathingAudioSource.volume = targetVolume;
+        fadeRoutine = null;
     }
 
     #region Unity Methods 
