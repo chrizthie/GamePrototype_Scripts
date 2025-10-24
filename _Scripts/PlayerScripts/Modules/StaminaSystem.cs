@@ -15,8 +15,8 @@ public class StaminaSystem : MonoBehaviour
     [SerializeField] private float staminaRegenTimer = 0f;
 
     [Header("Stamina Regeneration Paramaters")]
-    [SerializeField][Range(0, 50)] public float staminaDrain = 14f;
-    [SerializeField][Range(0, 50)] public float staminaRegen = 36f;
+    [SerializeField][Range(0, 50)] public float staminaDrain = 10f;
+    [SerializeField][Range(0, 50)] public float staminaRegen = 30f;
     [SerializeField] private const float StaminaTimeToDegen = 1.5f;
     [SerializeField] private const float StaminaTimeToRegen = 2.5f;
 
