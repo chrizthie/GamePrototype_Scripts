@@ -27,7 +27,7 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         // Running input
-        if (runAction.IsPressed() && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
+        if (runAction.IsPressed() && playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
         {
             Debug.Log("Running...");
             playerLocomotion.runInput = true;

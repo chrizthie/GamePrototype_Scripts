@@ -29,7 +29,7 @@ public class StaminaSystem : MonoBehaviour
 
     private void Update()
     {
-        //staminaBar.fillAmount = playerStamina / maxStamina;
+        staminaBar.fillAmount = playerStamina / maxStamina;
 
         if (inputManager.runAction.WasPressedThisFrame())
         {
@@ -94,7 +94,7 @@ public class StaminaSystem : MonoBehaviour
 
     private void UpdateStaminaDisplay()
     {
-        //staminaTitle.text = ((int)playerStamina).ToString();
+        staminaTitle.text = ((int)playerStamina).ToString();
     }
 
     #region Unity Methods

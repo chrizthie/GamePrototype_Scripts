@@ -103,7 +103,7 @@ public class PlayerLocomotion : MonoBehaviour
         }
 
         // is running flag
-        if (runInput && moveInput.y > 0f && !inPlace && canRun)
+        if (runInput && moveInput.y > 0f && !inPlace)
         {
             isRunning = true;
         }
