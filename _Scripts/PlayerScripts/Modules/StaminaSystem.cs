@@ -10,13 +10,13 @@ public class StaminaSystem : MonoBehaviour
     [Header("Stamina Main Parameters")]
     [SerializeField][Range(0, 100)] public float playerStamina = 100f;
     [SerializeField] private float maxStamina = 100f;
-    [SerializeField] private float staminaMomentum = 10f;
+    [SerializeField] private float staminaMomentum = 5f;
     [SerializeField] private float staminaDegenTimer = 0f;
     [SerializeField] private float staminaRegenTimer = 0f;
 
     [Header("Stamina Regeneration Paramaters")]
-    [SerializeField][Range(0, 50)] public float staminaDrain = 10f;
-    [SerializeField][Range(0, 50)] public float staminaRegen = 30f;
+    [SerializeField][Range(0, 40)] public float staminaDrain = 15f;
+    [SerializeField][Range(0, 40)] public float staminaRegen = 10f;
     [SerializeField] private const float StaminaTimeToDegen = 1.5f;
     [SerializeField] private const float StaminaTimeToRegen = 2.5f;
 
@@ -31,7 +31,7 @@ public class StaminaSystem : MonoBehaviour
     {
         //staminaBar.fillAmount = playerStamina / maxStamina;
 
-        if (inputManager.runAction.triggered)
+        if (inputManager.runAction.WasPressedThisFrame())
         {
             playerStamina = playerStamina - staminaMomentum;
         }
@@ -44,8 +44,6 @@ public class StaminaSystem : MonoBehaviour
         {
             HandleRegenStamina();
         }
-
-        //HandleNoStamina();
 
         UpdateStaminaDisplay();
     }
@@ -92,18 +90,6 @@ public class StaminaSystem : MonoBehaviour
         }
 
         staminaDegenTimer = 0f;
-    }
-
-    private void HandleNoStamina()
-    {
-        if (playerStamina == 0)
-        {
-            playerLocomotion.maxSpeed = preset.walkSpeed;
-        }
-        else
-        {
-            playerLocomotion.maxSpeed = preset.runSpeed;
-        }
     }
 
     private void UpdateStaminaDisplay()

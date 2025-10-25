@@ -1,20 +1,28 @@
 using UnityEngine;
 using System.Collections;
+using Unity.Cinemachine;
 
 public class PlayerBreathing : MonoBehaviour
 {
     [Header("Audio Settings")]
-    [Range(0.1f, 2f)] public float fadeDuration = 0.5f;
-    [Range(0f, 1f)] public float targetVolume = 0.6f;
+    [Range(0.1f, 2f)] public float fadeDuration = 0.6f;
+    [Range(0f, 1f)] public float targetVolume = 0.3f;
 
     [Header("Breathing Audio Clips")]
     [SerializeField] AudioClip normalBreathing;
     [SerializeField] AudioClip moderateBreathing;
     [SerializeField] AudioClip heavyBreathing;
 
+    [Header("Noise Transition Smoothing")]
+    [SerializeField] public float smoothSpeed = 5f;
+    private float targetAmplitude;
+    private float targetFrequency;
+
     [Header("Required Components")]
     [SerializeField] StaminaSystem staminaSystem;
-    [SerializeField] AudioSource breathingAudioSource;
+    [SerializeField] public AudioSource breathingAudioSource;
+    [SerializeField] public CinemachineCamera virtualCamera;
+    [SerializeField] CinemachineBasicMultiChannelPerlin cameraNoise;
 
     private AudioClip currentClip;
     private Coroutine fadeRoutine;
@@ -26,15 +34,25 @@ public class PlayerBreathing : MonoBehaviour
         if (staminaSystem.playerStamina > 70f)
         {
             selectedClip = normalBreathing;
+            targetAmplitude = 0.5f;
+            targetFrequency = 0.5f;
         }
         else if (staminaSystem.playerStamina > 30f)
         {
             selectedClip = moderateBreathing;
+            targetAmplitude = 0.6f;
+            targetFrequency = 0.6f;
         }
         else
         {
             selectedClip = heavyBreathing;
+            targetAmplitude = 0.7f;
+            targetFrequency = 0.7f;
         }
+
+        // Smoothly move current toward target
+        cameraNoise.AmplitudeGain = Mathf.Lerp(cameraNoise.AmplitudeGain, targetAmplitude, Time.deltaTime * smoothSpeed);
+        cameraNoise.FrequencyGain = Mathf.Lerp(cameraNoise.FrequencyGain, targetFrequency, Time.deltaTime * smoothSpeed);
 
         /// Only change clip if it’s actually different
         if (selectedClip != currentClip)
@@ -83,6 +101,14 @@ public class PlayerBreathing : MonoBehaviour
     }
 
     #region Unity Methods 
+
+    private void Start()
+    {
+        if (virtualCamera != null)
+        {
+            cameraNoise = virtualCamera.GetComponentInParent<CinemachineBasicMultiChannelPerlin>();
+        }
+    }
 
     private void Update()
     {
