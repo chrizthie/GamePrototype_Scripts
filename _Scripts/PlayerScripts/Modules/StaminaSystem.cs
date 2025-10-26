@@ -31,7 +31,7 @@ public class StaminaSystem : MonoBehaviour
     {
         staminaBar.fillAmount = playerStamina / maxStamina;
 
-        if (inputManager.runAction.WasPressedThisFrame())
+        if (inputManager.runAction.WasPressedThisFrame() && !playerLocomotion.obstacleOverhead)
         {
             playerStamina = playerStamina - staminaMomentum;
         }
