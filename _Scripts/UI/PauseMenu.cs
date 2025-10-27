@@ -10,8 +10,8 @@ public class PauseMenu : MonoBehaviour
 
     [Header("Required Components")]
     [SerializeField] private PlayerLocomotion playerLocomotion;
-    [SerializeField] private GameObject PlayerUI;
-    [SerializeField] private GameObject PauseMenuCanvas;
+    [SerializeField] private GameObject playerUI;
+    [SerializeField] private GameObject pauseMenu;
 
 
     public void Pause()
@@ -25,6 +25,11 @@ public class PauseMenu : MonoBehaviour
         {
             playerLocomotion.enabled = false;
         }
+
+        // enable
+        pauseMenu.SetActive(true);
+        // disable
+        playerUI.SetActive(false);
     }
 
     public void Unpause()
@@ -38,6 +43,11 @@ public class PauseMenu : MonoBehaviour
         {
             playerLocomotion.enabled = true;
         }
+
+        // enable
+        playerUI.SetActive(true);
+        // disable
+        pauseMenu.SetActive(false);
     }
 
     #region Unity Methods
@@ -47,7 +57,7 @@ public class PauseMenu : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
-        PauseMenuCanvas.SetActive(false);
+        pauseMenu.SetActive(false);
     }
 
     private void Update()
