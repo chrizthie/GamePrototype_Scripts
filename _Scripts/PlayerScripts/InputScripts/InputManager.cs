@@ -14,13 +14,19 @@ public class InputManager : MonoBehaviour
     private float lastCrouchTime = 0f;
     private float crouchCooldown = 0.5f;
 
-    [Header("Input in Update")]
-    [SerializeField] public InputAction runAction;
+    [Header("Inputs")]
+    [HideInInspector] public InputAction runAction;
+    [HideInInspector] public InputAction _pauseOpenCloseAction;
+
+    [Header("Input Bools")]
+    [SerializeField] public bool PauseOpenCloseInput { get; private set; }
 
     [Header("Required Components")]
-    [SerializeField] public InputSystem_Actions playerInputs;
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] FlashlightHandler flashlightHandler;
+    [SerializeField] public static InputManager instance;
+    [SerializeField] public InputSystem_Actions playerInputs;
+    [SerializeField] PlayerInput _playerInput;
 
     #region Input Handling
 
@@ -37,6 +43,9 @@ public class InputManager : MonoBehaviour
         {
             playerLocomotion.runInput = false;
         }
+
+        // when pause button is pressed
+        PauseOpenCloseInput = _pauseOpenCloseAction.WasPressedThisFrame();
     }
 
     private void OnMove(InputValue value)
@@ -128,11 +137,19 @@ public class InputManager : MonoBehaviour
         runAction.Disable();
     }
 
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+
+        _playerInput = gameObject.GetComponent<PlayerInput>();
+        _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];
+    }
+
     private void Start()
     {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-
         runAction = playerInputs.Player.Run;
     }
     #endregion

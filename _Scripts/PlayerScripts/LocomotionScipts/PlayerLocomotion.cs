@@ -288,7 +288,7 @@ public class PlayerLocomotion : MonoBehaviour
         }
     }
 
-    private void LookUpdate()
+    public void LookUpdate()
     {
         Vector2 input = new Vector2(lookInput.x * preset.lookSensitivity.x, lookInput.y * preset.lookSensitivity.y);
 

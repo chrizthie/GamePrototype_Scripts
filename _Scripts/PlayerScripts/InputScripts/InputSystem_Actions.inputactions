@@ -318,11 +318,50 @@
                 {
                     "name": "",
                     "id": "08151af4-4f74-4ca7-a597-818a445b83d4",
-                    "path": "<Gamepad>/rightStick/down",
+                    "path": "<Gamepad>/rightStickPress",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "PlayerUI",
+            "id": "db4471b4-6458-40af-bf32-89cf56737322",
+            "actions": [
+                {
+                    "name": "PauseOpenClose",
+                    "type": "Button",
+                    "id": "649eb165-a703-40dd-9220-a9439da975df",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "755d32f5-f4ff-4cb8-a1d3-6609f0642e81",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "PauseOpenClose",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f77880b2-b107-4917-8322-20f44257c86d",
+                    "path": "<Gamepad>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "PauseOpenClose",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -345,7 +384,7 @@
                     "name": "Submit",
                     "type": "Button",
                     "id": "7607c7b6-cd76-4816-beef-bd0341cfe950",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
