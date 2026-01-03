@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class FlashlightHandler : MonoBehaviour
 {
-    PlayerLocomotion playerLocomotion;
-
     [Header("Flashlight Parameters")]
     public Light flashLight;
     public Transform cameraAnchor;        // The player's camera or hand anchor
@@ -15,10 +13,8 @@ public class FlashlightHandler : MonoBehaviour
     public AudioSource flashlightAudioSource;   // Audio source for flashlight sounds
     public AudioClip flashlightTurnSound;       // Sound played when toggling the flashlight
 
-    private void Awake()
-    {
-        playerLocomotion = FindAnyObjectByType<PlayerLocomotion>();
-    }
+    [Header("Required Outside Components")]
+    [SerializeField] PlayerLocomotion playerLocomotion;
 
     private void Update()
     {

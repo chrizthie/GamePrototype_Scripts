@@ -9,6 +9,13 @@ public class StaminaDisplay : MonoBehaviour
     [SerializeField] StaminaSystem staminaSystem;
     [SerializeField] TextMeshProUGUI staminaTitle;
 
+    private void UpdateStaminaDisplay()
+    {
+        staminaTitle.text = ((int)staminaSystem.playerStamina).ToString();
+    }
+
+    #region Unity Methods
+
     private void Awake()
     {
         staminaSystem = GetComponent<StaminaSystem>();
@@ -19,8 +26,5 @@ public class StaminaDisplay : MonoBehaviour
         UpdateStaminaDisplay();
     }
 
-    private void UpdateStaminaDisplay()
-    {
-        staminaTitle.text = ((int)staminaSystem.playerStamina).ToString();
-    }
+    #endregion
 }

@@ -69,14 +69,14 @@ public class PlayerLocomotion : MonoBehaviour
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotionPreset preset;
-    [SerializeField] StaminaSystem staminaSystem;
     [SerializeField] CinemachineCamera firstPersonCamera;
     [SerializeField] CharacterController characterController;
     [SerializeField] Animator animator;
 
     [Header("Required Player Modules")]
-    [SerializeField] BlockAheadDetection blockAheadDetection;
+    [SerializeField] StaminaSystem staminaSystem;
     [SerializeField] FootstepsHandler footstepsHandler;
+    [SerializeField] BlockAheadDetection blockAheadDetection;
 
     #region Controller Methods
 
@@ -349,23 +349,7 @@ public class PlayerLocomotion : MonoBehaviour
         // animator
         if (animator == null)
         {
-            animator = GetComponentInChildren<Animator>();
-        }
-
-        // modules
-        if (staminaSystem == null)
-        {
-            staminaSystem = GetComponentInChildren<StaminaSystem>();
-        }
-
-        if (blockAheadDetection == null)
-        {
-            blockAheadDetection = GetComponentInChildren<BlockAheadDetection>();
-        }
-
-        if (footstepsHandler == null)
-        {
-            footstepsHandler = GetComponentInChildren<FootstepsHandler>();
+            animator = GetComponent<Animator>();
         }
     }
 

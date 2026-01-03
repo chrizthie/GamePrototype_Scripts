@@ -7,6 +7,8 @@ public class BlockAheadDetection : MonoBehaviour
     [SerializeField] float rayDistance = 0.4f;      // how far forward to check
     [SerializeField] LayerMask hitMask;           // which layers the ray can hit
 
+    #region Unity Methods
+
     private void Update()
     {
         Vector3 bodyOffset = new Vector3(0, 0.5f, 0); // adjust Y for chest height
@@ -25,4 +27,6 @@ public class BlockAheadDetection : MonoBehaviour
 
         Debug.DrawRay(origin, direction * rayDistance, Color.green);
     }
+
+    #endregion
 }

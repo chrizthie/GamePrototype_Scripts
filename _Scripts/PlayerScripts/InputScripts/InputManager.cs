@@ -13,20 +13,22 @@ public class InputManager : MonoBehaviour
     // crouch
     private float lastCrouchTime = 0f;
     private float crouchCooldown = 0.5f;
+    
+    [Header("Input Bools")]
+    public bool PauseOpenCloseInput { get; private set; }
 
     [Header("Inputs")]
     [HideInInspector] public InputAction runAction;
     [HideInInspector] public InputAction _pauseOpenCloseAction;
 
-    [Header("Input Bools")]
-    [SerializeField] public bool PauseOpenCloseInput { get; private set; }
-
     [Header("Required Components")]
     [SerializeField] PlayerLocomotion playerLocomotion;
-    [SerializeField] FlashlightHandler flashlightHandler;
+    [SerializeField] PlayerInput _playerInput;
     [SerializeField] public static InputManager instance;
     [SerializeField] public InputSystem_Actions playerInputs;
-    [SerializeField] PlayerInput _playerInput;
+
+    [Header("Required Outside Components")]
+    [SerializeField] FlashlightHandler flashlightHandler;
 
     #region Input Handling
 
@@ -114,9 +116,9 @@ public class InputManager : MonoBehaviour
             playerLocomotion = GetComponent<PlayerLocomotion>();
         }
 
-        if (flashlightHandler == null)
+        if (_playerInput == null)
         {
-            flashlightHandler = FindAnyObjectByType<FlashlightHandler>();
+            _playerInput = GetComponent<PlayerInput>();
         }
     }
 
@@ -128,7 +130,9 @@ public class InputManager : MonoBehaviour
         }
 
         playerInputs.Enable();
+
         runAction.Enable();
+        runAction = playerInputs.Player.Run;
     }
 
     private void OnDisable()
@@ -144,13 +148,9 @@ public class InputManager : MonoBehaviour
             instance = this;
         }
 
-        _playerInput = gameObject.GetComponent<PlayerInput>();
         _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];
+
     }
 
-    private void Start()
-    {
-        runAction = playerInputs.Player.Run;
-    }
     #endregion
 }

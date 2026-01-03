@@ -27,27 +27,6 @@ public class StaminaSystem : MonoBehaviour
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] InputManager inputManager;
 
-    private void Update()
-    {
-        staminaBar.fillAmount = playerStamina / maxStamina;
-
-        if (inputManager.runAction.WasPressedThisFrame() && !playerLocomotion.obstacleOverhead)
-        {
-            playerStamina = playerStamina - staminaMomentum;
-        }
-
-        if (playerLocomotion.isRunning)
-        {
-            HandleDegenStamina();
-        }
-        else
-        {
-            HandleRegenStamina();
-        }
-
-        UpdateStaminaDisplay();
-    }
-
     private void HandleDegenStamina()
     {
  
@@ -99,17 +78,25 @@ public class StaminaSystem : MonoBehaviour
 
     #region Unity Methods
 
-    private void OnValidate()
+    private void Update()
     {
-        if (playerLocomotion == null)
+        staminaBar.fillAmount = playerStamina / maxStamina;
+
+        if (inputManager.runAction.WasPressedThisFrame() && !playerLocomotion.obstacleOverhead)
         {
-            playerLocomotion = GetComponentInParent<PlayerLocomotion>();
+            playerStamina = playerStamina - staminaMomentum;
         }
 
-        if (inputManager == null)
+        if (playerLocomotion.isRunning)
         {
-            inputManager = GetComponentInParent<InputManager>();
+            HandleDegenStamina();
         }
+        else
+        {
+            HandleRegenStamina();
+        }
+
+        UpdateStaminaDisplay();
     }
 
     #endregion 
