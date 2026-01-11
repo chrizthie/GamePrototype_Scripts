@@ -384,10 +384,10 @@ public class PlayerLocomotion : MonoBehaviour
         {
             MoveUpdate();
         }
+
         Crouch();
         CheckOverhead();
         StandUp();
-
         MovementFlags();
         PlayerLanding();
         LookUpdate();
