@@ -32,6 +32,7 @@ public class PlayerLocomotion : MonoBehaviour
     private float checkDistance = 0.4f; // how far above head to check
 
     [Header("Movement Flags")]
+    [SerializeField] private bool lookEnabled = true;
     public bool inPlace;
     public bool isGrounded;
     public bool isWalking;
@@ -290,6 +291,11 @@ public class PlayerLocomotion : MonoBehaviour
 
     public void LookUpdate()
     {
+        if (!lookEnabled)
+        {
+            return;
+        }
+
         Vector2 input = new Vector2(lookInput.x * preset.lookSensitivity.x, lookInput.y * preset.lookSensitivity.y);
 
         // looking up and down
@@ -328,9 +334,26 @@ public class PlayerLocomotion : MonoBehaviour
         currentTilt = Mathf.Lerp(currentTilt, targetTilt, preset.tiltSmoothing * Time.deltaTime);
     }
 
+    private void OnPauseChanged(bool paused)
+    {
+        lookEnabled = !paused;
+    }
+
     #endregion
 
     #region Unity Methods
+
+    private void OnEnable()
+    {
+        // Subscribe to pause event
+        GamePause.OnPauseChanged += (isPaused) => lookEnabled = !isPaused;
+    }
+
+    private void OnDisable()
+    {
+        // Unsubscribe from pause event
+        GamePause.OnPauseChanged -= (isPaused) => lookEnabled = !isPaused;
+    }
 
     private void Start()
     {

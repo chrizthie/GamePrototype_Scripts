@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class PauseMenuManager : MonoBehaviour
 {
     public static PauseMenuManager Instance;
@@ -17,14 +18,17 @@ public class PauseMenuManager : MonoBehaviour
 
     public void OpenMenu(PauseMenu menu)
     {
-        if (menuStack.Count == 0)
-        {
-            PauseGame();
-        }
+        PauseGame();
 
         if (menuStack.Count > 0)
         {
-            menuStack.Peek().OnClose();
+            PauseMenu top = menuStack.Peek();
+
+            // Only hide previous menu if the new one is NOT modal
+            if (!menu.IsModal)
+            {
+                top.OnClose();
+            }
         }
 
         menuStack.Push(menu);
@@ -53,17 +57,17 @@ public class PauseMenuManager : MonoBehaviour
     private void PauseGame()
     {
         GameIsPaused = true;
-        
         playerHUDCanvas.enabled = false;
         Time.timeScale = 0f;
+        GamePause.SetPaused(true);
     }
 
     private void ResumeGame()
     {
         GameIsPaused = false;
-        
         playerHUDCanvas.enabled = true;
         Time.timeScale = 1f;
+        GamePause.SetPaused(false);
     }
 
     #region Unity Methods

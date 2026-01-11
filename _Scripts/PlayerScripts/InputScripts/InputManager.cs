@@ -14,7 +14,6 @@ public class InputManager : MonoBehaviour
     private float lastCrouchTime = 0f;
     private float crouchCooldown = 0.5f;
     
-    [Header("Input Bools")]
     public bool PauseOpenCloseInput { get; private set; }
 
     [Header("Inputs")]
@@ -31,24 +30,6 @@ public class InputManager : MonoBehaviour
     [SerializeField] FlashlightHandler flashlightHandler;
 
     #region Input Handling
-
-    private void Update()
-    {
-        // Running input
-        if (runAction.IsPressed() && playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
-        {
-            Debug.Log("Running...");
-            playerLocomotion.runInput = true;
-            playerLocomotion.crouchInput = false;
-        }
-        else
-        {
-            playerLocomotion.runInput = false;
-        }
-
-        // when pause button is pressed
-        PauseOpenCloseInput = _pauseOpenCloseAction.WasPressedThisFrame();
-    }
 
     private void OnMove(InputValue value)
     {
@@ -149,7 +130,24 @@ public class InputManager : MonoBehaviour
         }
 
         _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];
+    }
 
+    private void Update()
+    {
+        // Running input
+        if (runAction.IsPressed() && playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
+        {
+            Debug.Log("Running...");
+            playerLocomotion.runInput = true;
+            playerLocomotion.crouchInput = false;
+        }
+        else
+        {
+            playerLocomotion.runInput = false;
+        }
+
+        // when pause button is pressed
+        PauseOpenCloseInput = _pauseOpenCloseAction.WasPressedThisFrame();
     }
 
     #endregion

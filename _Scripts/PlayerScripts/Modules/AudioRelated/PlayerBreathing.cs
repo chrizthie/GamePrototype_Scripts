@@ -6,7 +6,7 @@ public class PlayerBreathing : MonoBehaviour
 {
     [Header("Audio Settings")]
     [Range(0.1f, 2f)] public float fadeDuration = 0.6f;
-    [Range(0f, 1f)] public float targetVolume = 0.3f;
+    [Range(0f, 1f)] public float targetVolume = 0.7f;
 
     [Header("Breathing Audio Clips")]
     [SerializeField] AudioClip normalBreathing;
@@ -31,23 +31,23 @@ public class PlayerBreathing : MonoBehaviour
     {
         AudioClip selectedClip = null;
 
-        if (staminaSystem.playerStamina > 70f)
+        if (staminaSystem.playerStamina > 60f)
         {
             selectedClip = normalBreathing;
             targetAmplitude = 0.5f;
             targetFrequency = 0.5f;
         }
-        else if (staminaSystem.playerStamina > 30f)
+        else if (staminaSystem.playerStamina < 60f)
         {
             selectedClip = moderateBreathing;
             targetAmplitude = 0.6f;
             targetFrequency = 0.6f;
         }
-        else
+        //else
         {
-            selectedClip = heavyBreathing;
-            targetAmplitude = 0.7f;
-            targetFrequency = 0.7f;
+            //selectedClip = heavyBreathing;
+            //targetAmplitude = 0.7f;
+            //targetFrequency = 0.7f;
         }
 
         // Smoothly move current toward target

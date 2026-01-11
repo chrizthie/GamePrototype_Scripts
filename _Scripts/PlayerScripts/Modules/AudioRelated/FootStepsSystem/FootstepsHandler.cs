@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 
-[RequireComponent(typeof(AudioSource))]
+//[RequireComponent(typeof(AudioSource))]
 public class FootstepsHandler : MonoBehaviour
 {
     [Header("Footsteps Collections")]
@@ -103,17 +103,6 @@ public class FootstepsHandler : MonoBehaviour
 
     private void OnValidate()
     {
-        if (characterController == null)
-        {
-            characterController = GetComponentInParent<CharacterController>();
-
-        }
-
-        if (playerLocomotion == null)
-        {
-            playerLocomotion = GetComponentInParent<PlayerLocomotion>();
-        }
-
         if (footstepsSwapper == null)
         {
             footstepsSwapper = GetComponent<FootstepsSwapper>();
@@ -136,12 +125,12 @@ public class FootstepsHandler : MonoBehaviour
         if (playerLocomotion.isCrouching)
         {   
             footstepAudioSource.pitch = 1.2f;
-            footstepAudioSource.volume = 0.2f;
+            footstepAudioSource.volume = 0.6f;
         }
         else
         {
             footstepAudioSource.pitch = 1.1f;
-            footstepAudioSource.volume = 0.4f;
+            footstepAudioSource.volume = 0.9f;
         }
 
         // Adjust step interval based on player state
