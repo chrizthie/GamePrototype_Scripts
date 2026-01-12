@@ -26,6 +26,6 @@ MonoBehaviour:
   walkTiltAngle: 1
   runTiltAngle: 2
   tiltSmoothing: 3
-  gravityScale: 25
-  maxGravity: 300
-  rampingGravity: 10
+  gravityScale: 2
+  maxGravity: 10
+  rampingGravity: 0.2

@@ -24,7 +24,7 @@ public class PlayerLocomotionPreset : ScriptableObject
     public float tiltSmoothing = 3f;
 
     [Header("Physics Parameters")]
-    public float gravityScale = 25f;
-    public float maxGravity = 300f;
-    public float rampingGravity = 10f;
+    public float gravityScale = 2f;
+    public float maxGravity = 10f;
+    public float rampingGravity = 0.2f;
 }

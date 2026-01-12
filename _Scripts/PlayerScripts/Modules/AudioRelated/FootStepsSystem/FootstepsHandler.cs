@@ -148,7 +148,7 @@ public class FootstepsHandler : MonoBehaviour
         }
 
         // Landing sound
-        if (characterController.isGrounded && playerLocomotion.airTime > 0.3f)
+        if (characterController.isGrounded && playerLocomotion.airTime > 0.4f)
         {
             PlayLandingAudio();
         }

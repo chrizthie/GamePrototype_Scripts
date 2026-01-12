@@ -1,7 +1,8 @@
-using UnityEngine;
-using Unity.Cinemachine;
-using System.Collections;
 using System;
+using System.Collections;
+using Unity.Cinemachine;
+using Unity.VisualScripting;
+using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -13,6 +14,7 @@ public class PlayerLocomotion : MonoBehaviour
     public bool canMove = true;
     public bool canRun;
     public bool obstacleOverhead = false;
+    private AnimatorStateInfo currentAnimState;
 
     [Header("Landing Parameters")]
     public bool isMovementPaused = false;
@@ -21,10 +23,10 @@ public class PlayerLocomotion : MonoBehaviour
     [Header("Crouching Parameters")]
     public Transform headPoint;
     public LayerMask obstacleMask;
-    private float standingHeight = 1.7f;
+    private float standingHeight = 1.72f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
-    private float standingCenter = 0.845f;
+    private float standingCenter = 0.86f;
     private float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
@@ -60,6 +62,7 @@ public class PlayerLocomotion : MonoBehaviour
     public float verticalVelocity = 0f;
     public Vector3 currentVelocity { get; private set; }
     public float currentSpeed { get; private set; }
+    private float gravityScale;
 
     [Header("Input")]
     public Vector2 moveInput;
@@ -67,6 +70,7 @@ public class PlayerLocomotion : MonoBehaviour
     public bool runInput;
     public bool crouchInput;
     public bool isFlashlightOn = false;
+    private Action<bool> pauseHandler;
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotionPreset preset;
@@ -83,81 +87,29 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void MovementFlags()
     {
-        // in place flag
-        if (currentSpeed == 0f)
-        {
-            inPlace = true;
-        }
-        else
-        {
-            inPlace = false;
-        }
+        // grounded
+        isGrounded = characterController.isGrounded;
 
-        // is walking flag
-        if (!runInput && currentSpeed > 0.1f)
-        {
-            isWalking = true;
-        }
-        else
-        {
-            isWalking = false;
-        }
+        // movement state
+        inPlace = currentSpeed <= 0.01f;
 
-        // is running flag
-        if (runInput && moveInput.y > 0f && !inPlace)
-        {
-            isRunning = true;
-        }
-        else
-        {
-            isRunning = false;
-        }
+        isWalkingBackwards = moveInput.y < 0f;
 
-        // is walking backwards flag
-        if (moveInput.y < 0f)
-        {
-            isWalkingBackwards = true;
-            isWalking = false;
-        }
-        else
-        {
-            isWalkingBackwards = false;
-        }
+        isWalking = !runInput && !inPlace && moveInput.y > 0f;
 
-        // is grounded flag
-        if (characterController.isGrounded)
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
-        }
+        isRunning = runInput && moveInput.y > 0f && !inPlace;
 
-        // can run flag
-        if (blockAheadDetection.blocked == false)
-        {
-            canRun = true;
-        }
-        else
-        {
-            canRun = false;
-        }
+        // crouch
+        isCrouching = crouchInput;
 
-        // is crouching flag
-        if (crouchInput)
-        {
-            isCrouching = true; 
-        }
-        else
-        {
-            isCrouching = false;
-        }
+        // run availability
+        canRun = !blockAheadDetection.blocked;
     }
 
     private void MoveUpdate()
     {
         // Snap moveInput to -1, 0, or 1 for each axis
+        //moveInput = new Vector2(Mathf.Sign(moveInput.x), Mathf.Sign(moveInput.y));
         moveInput.x = moveInput.x > 0 ? 1f : (moveInput.x < 0 ? -1f : 0f);
         moveInput.y = moveInput.y > 0 ? 1f : (moveInput.y < 0 ? -1f : 0f);
 
@@ -194,17 +146,28 @@ public class PlayerLocomotion : MonoBehaviour
             verticalVelocity = -3f;
         }
 
-        // apply gravity, with ramping when in air
-        verticalVelocity = Physics.gravity.y * preset.gravityScale * Time.deltaTime;
+        // grounding safety
+        if (isGrounded && verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f; // small stick force
+        }
 
+        if (!isGrounded && airTime < 0.05f)
+        {
+            verticalVelocity = 0f; // prevent micro-snaps
+        }
+
+        // gravity application
         if (!isGrounded)
         {
             airTime += Time.deltaTime;
-            preset.gravityScale = Mathf.Min(preset.gravityScale + airTime * preset.rampingGravity, preset.maxGravity);
+
+            gravityScale = Mathf.Min(gravityScale + airTime * preset.rampingGravity,preset.maxGravity);
+            verticalVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
         }
         else
         {
-            preset.gravityScale = 25;
+            gravityScale = preset.gravityScale;
             airTime = 0f;
         }
 
@@ -221,8 +184,7 @@ public class PlayerLocomotion : MonoBehaviour
     {
         if (isCrouching)
         {
-            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
-                animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
+            if (currentAnimState.shortNameHash != idleToCrouchHash && currentAnimState.shortNameHash != crouchToIdleHash)
             {
                 // center transition
                 Vector3 center = characterController.center;
@@ -259,8 +221,7 @@ public class PlayerLocomotion : MonoBehaviour
     {
         if(!isCrouching)
         {
-            if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash != idleToCrouchHash &&
-                animator.GetCurrentAnimatorStateInfo(0).shortNameHash != crouchToIdleHash)
+            if (currentAnimState.shortNameHash != idleToCrouchHash && currentAnimState.shortNameHash != crouchToIdleHash)
             {
                 // center transition
                 Vector3 center = characterController.center;
@@ -275,7 +236,7 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void PlayerLanding()
     {
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo stateInfo = currentAnimState;
 
         // Check if we are in the landing animation
         if (stateInfo.IsName("NormalLanding") || stateInfo.IsName("LandHarder"))
@@ -346,17 +307,19 @@ public class PlayerLocomotion : MonoBehaviour
     private void OnEnable()
     {
         // Subscribe to pause event
-        GamePause.OnPauseChanged += (isPaused) => lookEnabled = !isPaused;
+        pauseHandler = (isPaused) => lookEnabled = !isPaused;
+        GamePause.OnPauseChanged += pauseHandler;
     }
 
     private void OnDisable()
     {
         // Unsubscribe from pause event
-        GamePause.OnPauseChanged -= (isPaused) => lookEnabled = !isPaused;
+        GamePause.OnPauseChanged -= pauseHandler;
     }
 
     private void Start()
     {
+        gravityScale = preset.gravityScale;
         idleToCrouchHash = Animator.StringToHash("Idle2Crouch");
         crouchToIdleHash = Animator.StringToHash("Crouch2Idle");
     }
@@ -378,7 +341,7 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void Update()
     {
-        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0); // 0 = base layer
+        currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
 
         if (canMove)
         {
