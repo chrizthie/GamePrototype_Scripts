@@ -109,9 +109,9 @@ public class PlayerLocomotion : MonoBehaviour
     private void MoveUpdate()
     {
         // Snap moveInput to -1, 0, or 1 for each axis
-        //moveInput = new Vector2(Mathf.Sign(moveInput.x), Mathf.Sign(moveInput.y));
         moveInput.x = moveInput.x > 0 ? 1f : (moveInput.x < 0 ? -1f : 0f);
         moveInput.y = moveInput.y > 0 ? 1f : (moveInput.y < 0 ? -1f : 0f);
+
 
         Vector3 motion = transform.forward * moveInput.y + transform.right * moveInput.x;
         motion.y = 0f;
@@ -143,13 +143,13 @@ public class PlayerLocomotion : MonoBehaviour
 
         if (isGrounded && verticalVelocity < 0f)
         {
-            verticalVelocity = -3f;
+            verticalVelocity = -5f;
         }
 
         // grounding safety
         if (isGrounded && verticalVelocity < 0f)
         {
-            verticalVelocity = -2f; // small stick force
+            verticalVelocity = -5f; // small stick force
         }
 
         if (!isGrounded && airTime < 0.05f)

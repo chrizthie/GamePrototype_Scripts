@@ -31,13 +31,13 @@ public class PlayerBreathing : MonoBehaviour
     {
         AudioClip selectedClip = null;
 
-        if (staminaSystem.playerStamina > 60f)
+        if (staminaSystem.playerStamina > 50f)
         {
             selectedClip = normalBreathing;
             targetAmplitude = 0.5f;
             targetFrequency = 0.5f;
         }
-        else if (staminaSystem.playerStamina < 60f)
+        else if (staminaSystem.playerStamina < 50f)
         {
             selectedClip = moderateBreathing;
             targetAmplitude = 0.6f;
