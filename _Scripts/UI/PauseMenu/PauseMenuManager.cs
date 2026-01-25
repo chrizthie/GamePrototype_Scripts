@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 
 public class PauseMenuManager : MonoBehaviour
@@ -13,8 +15,15 @@ public class PauseMenuManager : MonoBehaviour
     [Header("State")]
     [SerializeField] private bool GameIsPaused;
 
+    [Header("Audio Related Components")]
+    [SerializeField] private AudioMixer audioMixer;
+    [SerializeField] private float sfxFadeDuration = 0.15f;
+    private Coroutine sfxFadeRoutine;
+
     [Header("Required Components")]
     [SerializeField] private Canvas playerHUDCanvas;
+
+
 
     public void OpenMenu(PauseMenu menu)
     {
@@ -60,6 +69,7 @@ public class PauseMenuManager : MonoBehaviour
         playerHUDCanvas.enabled = false;
         Time.timeScale = 0f;
         GamePause.SetPaused(true);
+        FadeSFX(-80f); // effectively silent
     }
 
     private void ResumeGame()
@@ -68,7 +78,35 @@ public class PauseMenuManager : MonoBehaviour
         playerHUDCanvas.enabled = true;
         Time.timeScale = 1f;
         GamePause.SetPaused(false);
+        FadeSFX(0f); // normal volume
     }
+
+    #region Audio related functions and routines
+
+    private void FadeSFX(float targetVolume)
+    {
+        if (sfxFadeRoutine != null)StopCoroutine(sfxFadeRoutine);
+
+        sfxFadeRoutine = StartCoroutine(FadeSFXRoutine(targetVolume));
+    }
+
+    private IEnumerator FadeSFXRoutine(float targetVolume)
+    {
+        audioMixer.GetFloat("sfxVolume", out float currentVolume);
+
+        float time = 0f;
+        while (time < sfxFadeDuration)
+        {
+            time += Time.unscaledDeltaTime;
+            float v = Mathf.Lerp(currentVolume, targetVolume, time / sfxFadeDuration);
+            audioMixer.SetFloat("sfxVolume", v);
+            yield return null;
+        }
+
+        audioMixer.SetFloat("sfxVolume", targetVolume);
+    }
+
+    #endregion
 
     #region Unity Methods
 

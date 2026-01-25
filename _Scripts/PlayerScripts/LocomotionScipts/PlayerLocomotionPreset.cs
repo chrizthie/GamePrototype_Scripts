@@ -4,8 +4,9 @@ using UnityEngine;
 public class PlayerLocomotionPreset : ScriptableObject
 {
     [Header("Movement Parameters")]
-    public float normalAcceleration = 9.5f;
-    public float crouchAcceleration = 2.5f;
+    public float normalAcceleration = 6f;
+    public float runningAcceleration = 8f;
+    public float crouchAcceleration = 2f;
     public float crouchSpeed = 0.85f;
     public float walkSpeed = 1.45f;
     public float runSpeed = 4.45f;

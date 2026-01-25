@@ -41,6 +41,7 @@ public class PlayerLocomotion : MonoBehaviour
     public bool isWalkingBackwards;
     public bool isRunning;
     public bool isCrouching;
+    private bool landingLock;
 
     [Header("Looking Parameters")]
     public float maxTiltAngle;
@@ -100,7 +101,16 @@ public class PlayerLocomotion : MonoBehaviour
         isRunning = runInput && moveInput.y > 0f && !inPlace;
 
         // crouch
-        isCrouching = crouchInput;
+        bool wantsToCrouch = crouchInput;
+
+        if (wantsToCrouch)
+        {
+            isCrouching = true;
+        }
+        else if (!obstacleOverhead)
+        {
+            isCrouching = false;
+        }
 
         // run availability
         canRun = !blockAheadDetection.blocked;
@@ -139,11 +149,6 @@ public class PlayerLocomotion : MonoBehaviour
         else
         {
             currentVelocity = Vector3.MoveTowards(currentVelocity, Vector3.zero, maxAcceleration * Time.deltaTime);
-        }
-
-        if (isGrounded && verticalVelocity < 0f)
-        {
-            verticalVelocity = -5f;
         }
 
         // grounding safety
@@ -219,17 +224,24 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void StandUp()
     {
-        if(!isCrouching)
+        if (!isCrouching && !obstacleOverhead)
         {
             if (currentAnimState.shortNameHash != idleToCrouchHash && currentAnimState.shortNameHash != crouchToIdleHash)
             {
-                // center transition
                 Vector3 center = characterController.center;
                 center.y = standingCenter;
                 characterController.center = center;
-                // height transition
+
                 characterController.height = Mathf.Lerp(characterController.height, standingHeight, crouchTransitionSpeed * Time.deltaTime);
-                maxAcceleration = preset.normalAcceleration;
+
+                if (isRunning)
+                {
+                    maxAcceleration = preset.runningAcceleration;
+                }
+                else
+                {
+                    maxAcceleration = preset.normalAcceleration;
+                }
             }
         }
     }
@@ -238,15 +250,11 @@ public class PlayerLocomotion : MonoBehaviour
     {
         AnimatorStateInfo stateInfo = currentAnimState;
 
-        // Check if we are in the landing animation
-        if (stateInfo.IsName("NormalLanding") || stateInfo.IsName("LandHarder"))
+        landingLock = stateInfo.IsName("NormalLanding") || stateInfo.IsName("LandHarder");
+
+        if (landingLock)
         {
-            canMove = false; // Disable movement
-            currentVelocity = Vector3.zero; // Stop movement immediately
-        }
-        else
-        {
-            canMove = true; // Enable movement
+            currentVelocity = Vector3.zero;
         }
     }
 
@@ -342,18 +350,24 @@ public class PlayerLocomotion : MonoBehaviour
     private void Update()
     {
         currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
+        
+        MovementFlags();
+        CheckOverhead();
+        PlayerLanding();
 
-        if (canMove)
+        if (canMove && !landingLock)
         {
             MoveUpdate();
         }
 
         Crouch();
-        CheckOverhead();
         StandUp();
-        MovementFlags();
-        PlayerLanding();
-        LookUpdate();
+
+        if (lookEnabled)
+        {
+            LookUpdate();
+        }
+
         CameraUpdate();
     }
 

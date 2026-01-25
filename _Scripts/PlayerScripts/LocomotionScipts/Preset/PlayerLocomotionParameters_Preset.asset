@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6415e844b6083c149a9b0602ed687f81, type: 3}
   m_Name: PlayerLocomotionParameters_Preset
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLocomotionPreset
-  normalAcceleration: 9.5
-  crouchAcceleration: 2.5
+  normalAcceleration: 6
+  crouchAcceleration: 2
   crouchSpeed: 0.85
   walkSpeed: 1.45
   runSpeed: 4.45

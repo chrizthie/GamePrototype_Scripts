@@ -78,6 +78,25 @@ public class InputManager : MonoBehaviour
 
     #endregion
 
+    #region Inputs Handled in Update for better control
+
+    private void OnRun()
+    {
+        // Running input is handled in Update for continuous checking
+        if (runAction.IsPressed() && playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
+        {
+            Debug.Log("Running...");
+            playerLocomotion.runInput = true;
+            playerLocomotion.crouchInput = false;
+        }
+        else
+        {
+            playerLocomotion.runInput = false;
+        }
+    }
+
+    #endregion
+
     #region Input Cooldowns
 
     private IEnumerator ResetFlashlightCooldown()
@@ -103,25 +122,6 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-        if (playerInputs == null)
-        {
-            playerInputs = new InputSystem_Actions();
-        }
-
-        playerInputs.Enable();
-
-        runAction.Enable();
-        runAction = playerInputs.Player.Run;
-    }
-
-    private void OnDisable()
-    {
-        playerInputs.Disable();
-        runAction.Disable();
-    }
-
     private void Awake()
     {
         if (instance == null)
@@ -132,19 +132,29 @@ public class InputManager : MonoBehaviour
         _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];
     }
 
+    private void OnEnable()
+    {
+        if (playerInputs == null)
+        {
+            playerInputs = new InputSystem_Actions();
+        }
+
+        playerInputs.Enable();
+
+        runAction = playerInputs.Player.Run;
+        runAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        playerInputs.Disable();
+        runAction.Disable();
+    }
+
+
     private void Update()
     {
-        // Running input
-        if (runAction.IsPressed() && playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
-        {
-            Debug.Log("Running...");
-            playerLocomotion.runInput = true;
-            playerLocomotion.crouchInput = false;
-        }
-        else
-        {
-            playerLocomotion.runInput = false;
-        }
+        OnRun();
 
         // when pause button is pressed
         PauseOpenCloseInput = _pauseOpenCloseAction.WasPressedThisFrame();
