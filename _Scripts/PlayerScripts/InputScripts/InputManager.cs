@@ -19,12 +19,14 @@ public class InputManager : MonoBehaviour
     [Header("Inputs")]
     [HideInInspector] public InputAction runAction;
     [HideInInspector] public InputAction _pauseOpenCloseAction;
+    [SerializeField] public bool isGamepad;
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] PlayerInput _playerInput;
     [SerializeField] public static InputManager instance;
     [SerializeField] public InputSystem_Actions playerInputs;
+
 
     [Header("Required Outside Components")]
     [SerializeField] FlashlightHandler flashlightHandler;
@@ -129,6 +131,7 @@ public class InputManager : MonoBehaviour
             instance = this;
         }
 
+        UpdateControlScheme();
         _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];
     }
 
@@ -139,18 +142,32 @@ public class InputManager : MonoBehaviour
             playerInputs = new InputSystem_Actions();
         }
 
+        _playerInput.onControlsChanged += OnControlsChanged;
         playerInputs.Enable();
-
         runAction = playerInputs.Player.Run;
         runAction.Enable();
     }
 
     private void OnDisable()
     {
+        _playerInput.onControlsChanged -= OnControlsChanged;
         playerInputs.Disable();
         runAction.Disable();
     }
 
+    private void OnControlsChanged(PlayerInput input)
+    {
+        UpdateControlScheme();
+    }
+
+    private void UpdateControlScheme()
+    {
+        isGamepad = _playerInput.currentControlScheme == "Gamepad";
+        //Debug.Log("Active scheme: " + _playerInput.currentControlScheme);
+    }
+
+
+    #endregion
 
     private void Update()
     {
@@ -159,6 +176,4 @@ public class InputManager : MonoBehaviour
         // when pause button is pressed
         PauseOpenCloseInput = _pauseOpenCloseAction.WasPressedThisFrame();
     }
-
-    #endregion
 }
