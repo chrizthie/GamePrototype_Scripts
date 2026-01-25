@@ -3,6 +3,8 @@ using System.Collections;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Windows;
 
 [RequireComponent(typeof(CharacterController))]
 
@@ -75,6 +77,7 @@ public class PlayerLocomotion : MonoBehaviour
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotionPreset preset;
+    [SerializeField] InputManager inputManager;
     [SerializeField] CinemachineCamera firstPersonCamera;
     [SerializeField] CharacterController characterController;
     [SerializeField] Animator animator;
@@ -118,10 +121,20 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void MoveUpdate()
     {
-        // Snap moveInput to -1, 0, or 1 for each axis
-        moveInput.x = moveInput.x > 0 ? 1f : (moveInput.x < 0 ? -1f : 0f);
-        moveInput.y = moveInput.y > 0 ? 1f : (moveInput.y < 0 ? -1f : 0f);
+        // Gamepad = analog
+        if (inputManager.isGamepad)
+        {
+            // deadzone
+            if (moveInput.magnitude < 0.15f) moveInput = Vector2.zero;
 
+            moveInput = Vector2.ClampMagnitude(moveInput, 1f);
+        }
+        // Keyboard = digital
+        else
+        {
+            moveInput.x = moveInput.x > 0 ? 1f : (moveInput.x < 0 ? -1f : 0f);
+            moveInput.y = moveInput.y > 0 ? 1f : (moveInput.y < 0 ? -1f : 0f);
+        }
 
         Vector3 motion = transform.forward * moveInput.y + transform.right * moveInput.x;
         motion.y = 0f;
