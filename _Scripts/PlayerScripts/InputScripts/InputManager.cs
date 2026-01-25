@@ -6,6 +6,9 @@ using System;
 [RequireComponent(typeof(PlayerLocomotion))]
 public class InputManager : MonoBehaviour
 {
+    bool sprintToggled;        // for controller toggle
+    bool wasRunPressedLastFrame;
+
     [Header("Input Cooldowns")]
     // flashlight
     public bool canFlashlightTurn = true;
@@ -17,9 +20,9 @@ public class InputManager : MonoBehaviour
     public bool PauseOpenCloseInput { get; private set; }
 
     [Header("Inputs")]
+    [SerializeField] public bool isGamepad;
     [HideInInspector] public InputAction runAction;
     [HideInInspector] public InputAction _pauseOpenCloseAction;
-    [SerializeField] public bool isGamepad;
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotion playerLocomotion;
@@ -84,17 +87,37 @@ public class InputManager : MonoBehaviour
 
     private void OnRun()
     {
-        // Running input is handled in Update for continuous checking
-        if (runAction.IsPressed() && playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && (playerLocomotion.moveInput.y == 1f || playerLocomotion.moveInput.x != 0f))
+        bool canSprint = playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && playerLocomotion.moveInput.sqrMagnitude > 0.01f;
+
+        if (!canSprint)
         {
-            Debug.Log("Running...");
-            playerLocomotion.runInput = true;
-            playerLocomotion.crouchInput = false;
+            playerLocomotion.runInput = false;
+            if (isGamepad) sprintToggled = false;
+            return;
+        }
+
+        if (isGamepad)
+        {
+            bool runPressed = runAction.IsPressed();
+
+            if (runPressed && !wasRunPressedLastFrame)
+            {
+                sprintToggled = !sprintToggled;
+            }
+
+            wasRunPressedLastFrame = runPressed;
+
+            playerLocomotion.runInput = sprintToggled;
         }
         else
         {
-            playerLocomotion.runInput = false;
+            playerLocomotion.runInput = runAction.IsPressed();
         }
+
+        if (!playerLocomotion.runInput) return;
+
+        Debug.Log("Running...");
+        playerLocomotion.crouchInput = false;
     }
 
     #endregion
