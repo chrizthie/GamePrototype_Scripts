@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: PlayerLocomotionParameters_Preset
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLocomotionPreset
   normalAcceleration: 6
+  runningAcceleration: 8
   crouchAcceleration: 2
   crouchSpeed: 0.85
   walkSpeed: 1.45

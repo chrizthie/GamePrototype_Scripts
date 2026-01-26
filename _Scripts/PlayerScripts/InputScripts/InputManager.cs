@@ -87,7 +87,7 @@ public class InputManager : MonoBehaviour
 
     private void OnRun()
     {
-        bool canSprint = playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && playerLocomotion.moveInput.sqrMagnitude > 0.01f;
+        bool canSprint = playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && !playerLocomotion.isWalkingBackwards && playerLocomotion.moveInput.sqrMagnitude > 0.01f;
 
         if (!canSprint)
         {

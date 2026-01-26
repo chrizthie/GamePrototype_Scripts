@@ -92,18 +92,18 @@ public class PauseMenuManager : MonoBehaviour
 
     private IEnumerator FadeSFXRoutine(float targetVolume)
     {
-        audioMixer.GetFloat("sfxVolume", out float currentVolume);
+        audioMixer.GetFloat("sfxHandle", out float currentVolume);
 
         float time = 0f;
         while (time < sfxFadeDuration)
         {
             time += Time.unscaledDeltaTime;
             float v = Mathf.Lerp(currentVolume, targetVolume, time / sfxFadeDuration);
-            audioMixer.SetFloat("sfxVolume", v);
+            audioMixer.SetFloat("sfxHandle", v);
             yield return null;
         }
 
-        audioMixer.SetFloat("sfxVolume", targetVolume);
+        audioMixer.SetFloat("sfxHandle", targetVolume);
     }
 
     #endregion
