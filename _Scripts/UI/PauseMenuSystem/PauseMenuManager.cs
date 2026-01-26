@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 
 public class PauseMenuManager : MonoBehaviour
@@ -21,6 +23,7 @@ public class PauseMenuManager : MonoBehaviour
     private Coroutine sfxFadeRoutine;
 
     [Header("Required Components")]
+    [SerializeField] private PlayerInput _playerInput;
     [SerializeField] private Canvas playerHUDCanvas;
 
 
@@ -63,13 +66,25 @@ public class PauseMenuManager : MonoBehaviour
         }
     }
 
+    public void Cancel()
+    {
+        // Only allow cancel when the game is paused
+        if (!GamePause.IsPaused)
+            return;
+
+        // Close the top-most menu (modal-safe)
+        CloseMenu();
+    }
+
     private void PauseGame()
     {
         GameIsPaused = true;
         playerHUDCanvas.enabled = false;
         Time.timeScale = 0f;
         GamePause.SetPaused(true);
-        FadeSFX(-80f); // effectively silent
+        _playerInput.actions.FindActionMap("Gameplay").Disable(); // disable gameplay input map
+        _playerInput.actions.FindActionMap("UI").Enable(); // disable gameplay input map
+        FadeSFX(-80f); // sound fx muted
     }
 
     private void ResumeGame()
@@ -78,8 +93,10 @@ public class PauseMenuManager : MonoBehaviour
         playerHUDCanvas.enabled = true;
         Time.timeScale = 1f;
         GamePause.SetPaused(false);
-        FadeSFX(0f); // normal volume
-    }
+        _playerInput.actions.FindActionMap("Gameplay").Enable(); // enable gameplay input map
+        _playerInput.actions.FindActionMap("UI").Disable(); // disable gameplay input map
+        FadeSFX(0f); // sound fx normal volume
+    }   
 
     #region Audio related functions and routines
 

@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System;
 using System.Collections;
 using Unity.Cinemachine;
@@ -273,12 +274,22 @@ public class PlayerLocomotion : MonoBehaviour
 
     public void LookUpdate()
     {
+        float lookSensitivity;
+
+        if (inputManager.isGamepad)
+        {
+            lookSensitivity = Mathf.Lerp(preset.controllerMin, preset.controllerMax, preset.controllerSensitivity);
+        } else
+        {
+            lookSensitivity = Mathf.Lerp(preset.mouseMin, preset.mouseMax, preset.mouseSensitivity);
+        }
+
         if (!lookEnabled)
         {
             return;
         }
-
-        Vector2 input = new Vector2(lookInput.x * preset.lookSensitivity.x, lookInput.y * preset.lookSensitivity.y);
+        
+        Vector2 input = new Vector2(lookInput.x * lookSensitivity, lookInput.y * lookSensitivity);
 
         // looking up and down
         CurrentPitch -= input.y;

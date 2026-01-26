@@ -7,6 +7,9 @@ public abstract class PauseMenu : MonoBehaviour
     [Header("Menu Behavior")]
     [SerializeField] private bool isModal = false;
 
+    [Header("Navigation")]
+    [SerializeField] private GameObject defaultSelected;
+
     [Header("Fade Settings")]
     [SerializeField] private float fadeDuration = 0.2f;
 
@@ -27,6 +30,12 @@ public abstract class PauseMenu : MonoBehaviour
     {
         gameObject.SetActive(true);
         StartFade(1f);
+
+        if (defaultSelected != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(defaultSelected);
+        }
     }
 
     public virtual void OnClose()

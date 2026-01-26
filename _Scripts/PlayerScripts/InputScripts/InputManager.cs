@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
 using System;
+using System.ComponentModel.Design;
 
 [RequireComponent(typeof(PlayerLocomotion))]
 public class InputManager : MonoBehaviour
@@ -68,6 +69,7 @@ public class InputManager : MonoBehaviour
 
     private void OnFlashlight(InputValue value)
     {
+
         if (!canFlashlightTurn) return;
 
         canFlashlightTurn = false;
@@ -167,7 +169,7 @@ public class InputManager : MonoBehaviour
 
         _playerInput.onControlsChanged += OnControlsChanged;
         playerInputs.Enable();
-        runAction = playerInputs.Player.Run;
+        runAction = playerInputs.Gameplay.Run;
         runAction.Enable();
     }
 

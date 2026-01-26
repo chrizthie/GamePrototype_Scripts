@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class SettingsControls : PauseMenu
+public class SettingsAudio : PauseMenu
 {
     public void Back()
     {

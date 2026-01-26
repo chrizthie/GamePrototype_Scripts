@@ -11,15 +11,23 @@ public class PlayerLocomotionPreset : ScriptableObject
     public float walkSpeed = 1.45f;
     public float runSpeed = 4.45f;
 
-    [Header("Looking Parameters")]
-    public Vector2 lookSensitivity = new Vector2(0.1f, 0.1f);
-    public float pitchUpLimit = 73f;
-    public float pitchDownLimit = 73f;
+    [Header("Mouse Parameters")]
+    public float mouseSensitivity = 0.45f; // mouse sensitivity
+    public float mouseMin = 0.02f;
+    public float mouseMax = 0.18f;
+    
+    [Header("Controller Parameters")]
+    public float controllerSensitivity = 0.45f; // controller sensitivity
+    public float controllerMin = 0.8f;
+    public float controllerMax = 1.8f;
+
 
     [Header("Camera Parameters")]
     public float cameraWalkFOV = 57f;
     public float cameraRunFOV = 62f;
     public float cameraFOVSmoothing = 5f;
+    public float pitchUpLimit = 73f;
+    public float pitchDownLimit = 73f;
     public float walkTiltAngle = 1f;
     public float runTiltAngle = 2f;
     public float tiltSmoothing = 3f;

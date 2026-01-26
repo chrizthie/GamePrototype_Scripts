@@ -43,7 +43,7 @@ public class PlayerInteract : MonoBehaviour
             {
                 Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
                 playerUI.UpdateText(interactable.promptMessage);
-                if (inputManager.playerInputs.Player.Interact.triggered)
+                if (inputManager.playerInputs.Gameplay.Interact.triggered)
                 {
                     interactable.BaseInteract();
                 }
