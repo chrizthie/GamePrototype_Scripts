@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
 using System;
-using System.ComponentModel.Design;
 
 [RequireComponent(typeof(PlayerLocomotion))]
 public class InputManager : MonoBehaviour
