@@ -343,7 +343,7 @@ public class PlayerLocomotion : MonoBehaviour
         GamePause.OnPauseChanged += pauseHandler;
     }
 
-    private void OnDisable()
+    private void OnDisable() 
     {
         // Unsubscribe from pause event
         GamePause.OnPauseChanged -= pauseHandler;

@@ -399,7 +399,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""070c3f70-99ef-42de-a24f-189278f77e8e"",
-                    ""path"": ""<Gamepad>/select"",
+                    ""path"": ""<Gamepad>/start"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",

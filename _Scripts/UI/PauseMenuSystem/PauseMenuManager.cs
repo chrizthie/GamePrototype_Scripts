@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.EventSystems;
@@ -13,6 +14,7 @@ public class PauseMenuManager : MonoBehaviour
     [SerializeField] private PauseMenu mainPauseMenu;
 
     private Stack<PauseMenu> menuStack = new Stack<PauseMenu>();
+    private InputAction _cancelAction;
 
     [Header("State")]
     [SerializeField] private bool GameIsPaused;
@@ -21,6 +23,7 @@ public class PauseMenuManager : MonoBehaviour
     [SerializeField] private AudioMixer audioMixer;
     [SerializeField] private float sfxFadeDuration = 0.15f;
     private Coroutine sfxFadeRoutine;
+
 
     [Header("Required Components")]
     [SerializeField] private PlayerInput _playerInput;
@@ -47,6 +50,14 @@ public class PauseMenuManager : MonoBehaviour
         menu.OnOpen();
     }
 
+    private void OnCancel(InputAction.CallbackContext ctx)
+    {
+        if (!GamePause.IsPaused)
+            return;
+
+        PauseMenuManager.Instance.CloseMenu();
+    }
+
     public void CloseMenu()
     {
         if (menuStack.Count == 0)
@@ -64,16 +75,6 @@ public class PauseMenuManager : MonoBehaviour
         {
             ResumeGame();
         }
-    }
-
-    public void Cancel()
-    {
-        // Only allow cancel when the game is paused
-        if (!GamePause.IsPaused)
-            return;
-
-        // Close the top-most menu (modal-safe)
-        CloseMenu();
     }
 
     private void PauseGame()
@@ -137,6 +138,17 @@ public class PauseMenuManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private void OnEnable()
+    {
+        _cancelAction = _playerInput.actions["Cancel"];
+        _cancelAction.performed += OnCancel;
+    }
+
+    private void OnDisable()
+    {
+        _cancelAction.performed -= OnCancel;
     }
 
     private void Update()
