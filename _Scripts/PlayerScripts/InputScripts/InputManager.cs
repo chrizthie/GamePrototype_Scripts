@@ -6,26 +6,29 @@ using System;
 [RequireComponent(typeof(PlayerLocomotion))]
 public class InputManager : MonoBehaviour
 {
-    bool sprintToggled;        // for controller toggle
-    bool wasRunPressedLastFrame;
+    private PlayerInputState currentInput;
+    public PlayerInputState CurrentInput => currentInput;
+
+    private bool sprintToggled;        // for controller toggle
+    private bool wasRunPressedLastFrame; // to detect button press edge
 
     [Header("Input Cooldowns")]
     // flashlight
+    private float nextFlashlightTime;
     public bool canFlashlightTurn = true;
     private float flashlightCooldown = 0.2f;
     // crouch
     private float lastCrouchTime = 0f;
     private float crouchCooldown = 0.5f;
-    
-    public bool PauseOpenCloseInput { get; private set; }
 
     [Header("Inputs")]
+    public bool PauseOpenCloseInput { get; private set; }
     [SerializeField] public bool isGamepad;
+    [SerializeField] public bool isFlashlightOn = false;
     [HideInInspector] public InputAction runAction;
     [HideInInspector] public InputAction _pauseOpenCloseAction;
 
     [Header("Required Components")]
-    [SerializeField] PlayerLocomotion playerLocomotion;
     [SerializeField] PlayerInput _playerInput;
     [SerializeField] public static InputManager instance;
     [SerializeField] public InputSystem_Actions playerInputs;
@@ -38,48 +41,31 @@ public class InputManager : MonoBehaviour
 
     private void OnMove(InputValue value)
     {
-        playerLocomotion.moveInput = value.Get<Vector2>();
+        currentInput.move = value.Get<Vector2>();
     }
 
     private void OnLook(InputValue value)
     {
-        playerLocomotion.lookInput = value.Get<Vector2>();
+        currentInput.look = value.Get<Vector2>();
     }
 
     private void OnCrouch(InputValue value)
     {
-        if (value.isPressed && !playerLocomotion.isRunning)
-        {
-            // Prevent standing up if crouched and blocked overhead
-            if (playerLocomotion.isCrouching && playerLocomotion.obstacleOverhead)
-            {
-                // Stay crouched, do nothing
-                return;
-            }
+        if (!value.isPressed) return;
+        if (Time.time - lastCrouchTime < crouchCooldown) return;
 
-            // Check cooldown before toggling crouch
-            if (Time.time - lastCrouchTime >= crouchCooldown)
-            {
-                playerLocomotion.crouchInput = !playerLocomotion.crouchInput;
-                lastCrouchTime = Time.time; // Reset cooldown timer
-            }
-        }
+        currentInput.crouch = !CurrentInput.crouch;
+        lastCrouchTime = Time.time;
     }
 
     private void OnFlashlight(InputValue value)
     {
+        if (!value.isPressed) return;
+        if (Time.time < nextFlashlightTime) return;
 
-        if (!canFlashlightTurn) return;
+        isFlashlightOn = !isFlashlightOn; flashlightHandler.flashlightAudioSource.PlayOneShot(flashlightHandler.flashlightTurnSound);
 
-        canFlashlightTurn = false;
-
-        if (value.isPressed)
-        {
-            playerLocomotion.isFlashlightOn = !playerLocomotion.isFlashlightOn;
-            flashlightHandler.flashlightAudioSource.PlayOneShot(flashlightHandler.flashlightTurnSound);
-        }
-
-        StartCoroutine(ResetFlashlightCooldown());
+        nextFlashlightTime = Time.time + flashlightCooldown;
     }
 
     #endregion
@@ -88,47 +74,22 @@ public class InputManager : MonoBehaviour
 
     private void OnRun()
     {
-        bool canSprint = playerLocomotion.canRun && !playerLocomotion.obstacleOverhead && !playerLocomotion.isWalkingBackwards && playerLocomotion.moveInput.sqrMagnitude > 0.01f;
-
-        if (!canSprint)
-        {
-            playerLocomotion.runInput = false;
-            if (isGamepad) sprintToggled = false;
-            return;
-        }
-
         if (isGamepad)
         {
-            bool runPressed = runAction.IsPressed();
+            bool pressed = runAction.IsPressed();
 
-            if (runPressed && !wasRunPressedLastFrame)
+            if (pressed && !wasRunPressedLastFrame)
             {
                 sprintToggled = !sprintToggled;
             }
 
-            wasRunPressedLastFrame = runPressed;
-
-            playerLocomotion.runInput = sprintToggled;
+            wasRunPressedLastFrame = pressed;
+            currentInput.run = sprintToggled;
         }
         else
         {
-            playerLocomotion.runInput = runAction.IsPressed();
+            currentInput.run = runAction.IsPressed();
         }
-
-        if (!playerLocomotion.runInput) return;
-
-        Debug.Log("Running...");
-        playerLocomotion.crouchInput = false;
-    }
-
-    #endregion
-
-    #region Input Cooldowns
-
-    private IEnumerator ResetFlashlightCooldown()
-    {
-        yield return new WaitForSeconds(flashlightCooldown);
-        canFlashlightTurn = true;
     }
 
     #endregion
@@ -137,11 +98,6 @@ public class InputManager : MonoBehaviour
 
     private void OnValidate()
     {
-        if (playerLocomotion == null)
-        {
-            playerLocomotion = GetComponent<PlayerLocomotion>();
-        }
-
         if (_playerInput == null)
         {
             _playerInput = GetComponent<PlayerInput>();
@@ -150,10 +106,12 @@ public class InputManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
+        if (instance != null && instance != this)
         {
-            instance = this;
+            Destroy(gameObject);
+            return;
         }
+        instance = this;
 
         UpdateControlScheme();
         _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];

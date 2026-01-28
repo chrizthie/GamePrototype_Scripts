@@ -17,6 +17,8 @@ public class PlayerLocomotion : MonoBehaviour
     public bool canMove = true;
     public bool canRun;
     public bool obstacleOverhead = false;
+    private float overheadCheckTimer;
+    private const float overheadCheckInterval = 0.05f;
     private AnimatorStateInfo currentAnimState;
 
     [Header("Landing Parameters")]
@@ -88,6 +90,14 @@ public class PlayerLocomotion : MonoBehaviour
     [SerializeField] FootstepsHandler footstepsHandler;
     [SerializeField] BlockAheadDetection blockAheadDetection;
 
+    public void ApplyInput(PlayerInputState input)
+    {
+        moveInput = input.move;
+        lookInput = input.look;
+        runInput = input.run;
+        crouchInput = input.crouch;
+    }
+
     #region Controller Methods
 
     private void MovementFlags()
@@ -142,13 +152,13 @@ public class PlayerLocomotion : MonoBehaviour
         motion.Normalize();
 
         // determine max speed
-        if (runInput && canRun == true && !isWalkingBackwards && staminaSystem.playerStamina != 0)
-        {
-            maxSpeed = preset.runSpeed;
-        }
-        else if (crouchInput)
+        if (isCrouching)
         {
             maxSpeed = preset.crouchSpeed;
+        }
+        else if (runInput && canRun && !isWalkingBackwards && staminaSystem.playerStamina > 0f)
+        {
+            maxSpeed = preset.runSpeed;
         }
         else
         {
@@ -181,7 +191,7 @@ public class PlayerLocomotion : MonoBehaviour
         {
             airTime += Time.deltaTime;
 
-            gravityScale = Mathf.Min(gravityScale + airTime * preset.rampingGravity,preset.maxGravity);
+            gravityScale = Mathf.Min(gravityScale + preset.rampingGravity * Time.deltaTime, preset.maxGravity);
             verticalVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
         }
         else
@@ -218,22 +228,11 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void CheckOverhead()
     {
-        if (headPoint == null)
-            headPoint = transform; // fallback
+        overheadCheckTimer -= Time.deltaTime;
+        if (overheadCheckTimer > 0f) return;
+        overheadCheckTimer = overheadCheckInterval;
 
-        // Perform spherecast upwards
-        if (Physics.SphereCast(headPoint.position, checkRadius, Vector3.up, out RaycastHit hit, checkDistance, obstacleMask))
-        {
-            obstacleOverhead = true;
-        }
-        else
-        {
-            obstacleOverhead = false;
-        }
-
-        // Debug visualization
-        Color color = obstacleOverhead ? Color.red : Color.green;
-        Debug.DrawRay(headPoint.position, Vector3.up * checkDistance, color);
+        obstacleOverhead = Physics.SphereCast(headPoint.position, checkRadius, Vector3.up, out _, checkDistance, obstacleMask);
     }
 
     private void StandUp()
@@ -373,6 +372,8 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void Update()
     {
+        ApplyInput(inputManager.CurrentInput);
+
         currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
         
         MovementFlags();

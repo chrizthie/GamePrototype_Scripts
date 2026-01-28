@@ -14,11 +14,12 @@ public class FlashlightHandler : MonoBehaviour
     public AudioClip flashlightTurnSound;       // Sound played when toggling the flashlight
 
     [Header("Required Outside Components")]
+    [SerializeField] InputManager inputManager;
     [SerializeField] PlayerLocomotion playerLocomotion;
 
     private void Update()
     {
-        if (playerLocomotion.isFlashlightOn)
+        if (inputManager.isFlashlightOn)
         {
             flashLight.enabled = true;
         }
