@@ -14,8 +14,7 @@ public class InputManager : MonoBehaviour
     private float flashlightCooldown = 0.3f;    // to prevent rapid toggling
     private float lastCrouchTime = 0f;          // time of last crouch toggle
     private float crouchCooldown = 0.5f;        // to prevent rapid toggling
-    private bool sprintToggled;                 // for controller toggle
-    private bool wasRunPressedLastFrame;        // to detect button press edge
+    private bool runRequested;                  // for controller toggle
 
     [Header("Inputs")]
     public bool PauseOpenCloseInput { get; private set; }
@@ -64,22 +63,29 @@ public class InputManager : MonoBehaviour
 
     private void OnRun()
     {
-        if (isGamepad)
+        if (!isGamepad)
         {
-            bool pressed = runAction.IsPressed();
-
-            if (pressed && !wasRunPressedLastFrame)
-            {
-                sprintToggled = !sprintToggled;
-            }
-
-            wasRunPressedLastFrame = pressed;
-            currentInput.run = sprintToggled;
-        }
-        else
-        {
+            // keyboard = hold to run
             currentInput.run = runAction.IsPressed();
+            return;
         }
+
+        // gamepad logic
+        bool isMoving = currentInput.move.sqrMagnitude > 0.01f;
+
+        // press run ONCE to request running
+        if (runAction.WasPressedThisFrame() && isMoving)
+        {
+            runRequested = true;
+        }
+
+        // stop running when movement stops
+        if (!isMoving)
+        {
+            runRequested = false;
+        }
+
+        currentInput.run = runRequested && isMoving;
     }
 
     #endregion

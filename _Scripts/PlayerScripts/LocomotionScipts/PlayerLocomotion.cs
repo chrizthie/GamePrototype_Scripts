@@ -11,23 +11,32 @@ using UnityEngine.Windows;
 
 public class PlayerLocomotion : MonoBehaviour
 {
+    #region Movement Parameters
     [Header("Movement Parameters")]
     public float maxSpeed;
     public float maxAcceleration;
     public bool canMove = true;
     public bool canRun;
     public bool obstacleOverhead = false;
+    public bool justStartedRunning { get; private set; }
+    private bool wasRunning;
     private float overheadCheckTimer;
     private const float overheadCheckInterval = 0.05f;
     private AnimatorStateInfo currentAnimState;
+    #endregion
 
+    #region Landing Parameters
     [Header("Landing Parameters")]
     public bool isMovementPaused = false;
     public float landingPauseTime = 0.5f;
+    #endregion
 
+    #region Crouching Parameters
     [Header("Crouching Parameters")]
     public Transform headPoint;
     public LayerMask obstacleMask;
+    private bool wasCrouching;
+    private bool justStartedCrouching;
     private float standingHeight = 1.72f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
@@ -37,7 +46,9 @@ public class PlayerLocomotion : MonoBehaviour
     private int crouchToIdleHash;
     private float checkRadius = 0.25f; // width of the check sphere
     private float checkDistance = 0.4f; // how far above head to check
+    #endregion
 
+    #region Movement Flags
     [Header("Movement Flags")]
     [SerializeField] private bool lookEnabled = true;
     public bool inPlace;
@@ -47,7 +58,9 @@ public class PlayerLocomotion : MonoBehaviour
     public bool isRunning;
     public bool isCrouching;
     private bool landingLock;
+    #endregion
 
+    #region Looking Parameters
     [Header("Looking Parameters")]
     private float maxTiltAngle;
     private float currentPitch = 0f;
@@ -62,7 +75,9 @@ public class PlayerLocomotion : MonoBehaviour
             currentPitch = Mathf.Clamp(value, -preset.pitchUpLimit, preset.pitchDownLimit);
         }
     }
+    #endregion
 
+    #region Physics Parameters
     [Header("Physics Parameters")]
     public float movementSpeed;
     public float verticalVelocity = 0f;
@@ -70,13 +85,16 @@ public class PlayerLocomotion : MonoBehaviour
     private float gravityScale;
     public Vector3 currentVelocity { get; private set; }
     public float currentSpeed { get; private set; }
+    #endregion
 
+    #region Input Parameters
     [Header("Input")]
     [HideInInspector] public Vector2 moveInput;
     private Vector2 lookInput;
     private bool runInput;
     private bool crouchInput;
     private Action<bool> pauseHandler;
+    #endregion
 
     [Header("Required Components")]
     [SerializeField] PlayerLocomotionPreset preset;
@@ -112,7 +130,7 @@ public class PlayerLocomotion : MonoBehaviour
 
         isWalking = !runInput && !inPlace && moveInput.y > 0f;
 
-        isRunning = runInput && moveInput.y > 0f && !inPlace;
+        isRunning = runInput && moveInput.y > 0f && !inPlace && !isCrouching;
 
         // crouch
         bool wantsToCrouch = crouchInput;
@@ -126,8 +144,22 @@ public class PlayerLocomotion : MonoBehaviour
             isCrouching = false;
         }
 
+        // crouch always cancels run
+        if (isCrouching)
+        {
+            runInput = false;
+        }
+
         // run availability
         canRun = !blockAheadDetection.blocked;
+
+        // detect run start (state edge)
+        justStartedRunning = !wasRunning && isRunning;
+        wasRunning = isRunning;
+
+        // PUT THIS HERE — LAST LINES ONLY
+        justStartedCrouching = !wasCrouching && isCrouching;
+        wasCrouching = isCrouching;
     }
 
     private void MoveUpdate()
@@ -163,6 +195,12 @@ public class PlayerLocomotion : MonoBehaviour
         else
         {
             maxSpeed = preset.walkSpeed;
+        }
+
+        // hard brake when entering crouch
+        if (justStartedCrouching)
+        {
+            currentVelocity *= 0.5f;
         }
 
         // accelerate to target speed
