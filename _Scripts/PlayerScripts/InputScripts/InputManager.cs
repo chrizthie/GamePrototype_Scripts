@@ -9,22 +9,17 @@ public class InputManager : MonoBehaviour
     private PlayerInputState currentInput;
     public PlayerInputState CurrentInput => currentInput;
 
-    private bool sprintToggled;        // for controller toggle
-    private bool wasRunPressedLastFrame; // to detect button press edge
-
-    [Header("Input Cooldowns")]
-    // flashlight
-    private float nextFlashlightTime;
-    public bool canFlashlightTurn = true;
-    private float flashlightCooldown = 0.2f;
-    // crouch
-    private float lastCrouchTime = 0f;
-    private float crouchCooldown = 0.5f;
+    [Header("Input Variables")]
+    private float nextFlashlightTime;           // time when flashlight can be toggled again
+    private float flashlightCooldown = 0.3f;    // to prevent rapid toggling
+    private float lastCrouchTime = 0f;          // time of last crouch toggle
+    private float crouchCooldown = 0.5f;        // to prevent rapid toggling
+    private bool sprintToggled;                 // for controller toggle
+    private bool wasRunPressedLastFrame;        // to detect button press edge
 
     [Header("Inputs")]
     public bool PauseOpenCloseInput { get; private set; }
     [SerializeField] public bool isGamepad;
-    [SerializeField] public bool isFlashlightOn = false;
     [HideInInspector] public InputAction runAction;
     [HideInInspector] public InputAction _pauseOpenCloseAction;
 
@@ -32,10 +27,6 @@ public class InputManager : MonoBehaviour
     [SerializeField] PlayerInput _playerInput;
     [SerializeField] public static InputManager instance;
     [SerializeField] public InputSystem_Actions playerInputs;
-
-
-    [Header("Required Outside Components")]
-    [SerializeField] FlashlightHandler flashlightHandler;
 
     #region Input Handling
 
@@ -60,11 +51,10 @@ public class InputManager : MonoBehaviour
 
     private void OnFlashlight(InputValue value)
     {
-        if (!value.isPressed) return;
+        if(!value.isPressed) return;
         if (Time.time < nextFlashlightTime) return;
 
-        isFlashlightOn = !isFlashlightOn; flashlightHandler.flashlightAudioSource.PlayOneShot(flashlightHandler.flashlightTurnSound);
-
+        currentInput.flashlight = !currentInput.flashlight;
         nextFlashlightTime = Time.time + flashlightCooldown;
     }
 

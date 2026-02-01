@@ -49,7 +49,7 @@ public class PlayerLocomotion : MonoBehaviour
     private bool landingLock;
 
     [Header("Looking Parameters")]
-    public float maxTiltAngle;
+    private float maxTiltAngle;
     private float currentPitch = 0f;
     private float currentTilt = 0f;
 
@@ -64,18 +64,18 @@ public class PlayerLocomotion : MonoBehaviour
     }
 
     [Header("Physics Parameters")]
-    public float airTime;
+    public float movementSpeed;
     public float verticalVelocity = 0f;
+    public float airTime;
+    private float gravityScale;
     public Vector3 currentVelocity { get; private set; }
     public float currentSpeed { get; private set; }
-    private float gravityScale;
 
     [Header("Input")]
-    public Vector2 moveInput;
-    public Vector2 lookInput;
-    public bool runInput;
-    public bool crouchInput;
-    public bool isFlashlightOn = false;
+    [HideInInspector] public Vector2 moveInput;
+    private Vector2 lookInput;
+    private bool runInput;
+    private bool crouchInput;
     private Action<bool> pauseHandler;
 
     [Header("Required Components")]
@@ -372,6 +372,7 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void Update()
     {
+        movementSpeed = currentSpeed;
         ApplyInput(inputManager.CurrentInput);
 
         currentAnimState = animator.GetCurrentAnimatorStateInfo(0);

@@ -3,6 +3,7 @@ using UnityEngine;
 public class FlashlightHandler : MonoBehaviour
 {
     [Header("Flashlight Parameters")]
+    private bool lastFlashlightState;
     public Light flashLight;
     public Transform cameraAnchor;        // The player's camera or hand anchor
     public float walkSmoothing = 12f;
@@ -19,23 +20,19 @@ public class FlashlightHandler : MonoBehaviour
 
     private void Update()
     {
-        if (inputManager.isFlashlightOn)
+        bool flashlightRequested = inputManager.CurrentInput.flashlight;
+
+        // Toggle light
+        flashLight.enabled = flashlightRequested;
+
+        // Play sound only on change
+        if (flashlightRequested != lastFlashlightState)
         {
-            flashLight.enabled = true;
-        }
-        else
-        {
-            flashLight.enabled = false;
+            flashlightAudioSource.PlayOneShot(flashlightTurnSound);
+            lastFlashlightState = flashlightRequested;
         }
 
-        if (playerLocomotion.isRunning)
-        {
-            rotationSmooth = runSmoothing;
-        }
-        else
-        {
-            rotationSmooth = walkSmoothing;
-        }
+        rotationSmooth = playerLocomotion.isRunning ? runSmoothing : walkSmoothing;
     }
 
     private void LateUpdate()
