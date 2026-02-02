@@ -1,72 +1,47 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-
 
 public class PauseMenuManager : MonoBehaviour
 {
     public static PauseMenuManager Instance;
 
+    [Header("Menus")]
     [SerializeField] private PauseMenu mainPauseMenu;
-
-    private Stack<PauseMenu> menuStack = new Stack<PauseMenu>();
-    private InputAction _cancelAction;
+    private readonly Stack<PauseMenu> menuStack = new();
 
     [Header("State")]
-    [SerializeField] private bool GameIsPaused;
+    [SerializeField] private bool gameIsPaused;
 
-    [Header("Audio Related Components")]
+    [Header("Audio")]
     [SerializeField] private AudioMixer audioMixer;
     [SerializeField] private float sfxFadeDuration = 0.15f;
     private Coroutine sfxFadeRoutine;
 
-
     [Header("Required Components")]
-    [SerializeField] private PlayerInput _playerInput;
-    [SerializeField] private InputManager inputManager;
+    [SerializeField] private PlayerInput playerInput;
     [SerializeField] private Canvas playerHUDCanvas;
+    [SerializeField] private InputManager inputManager;
+    public InputManager InputManager => inputManager;
 
+    private InputAction pauseAction;
+    private InputAction cancelAction;
 
+    #region Menu Logic
 
     public void OpenMenu(PauseMenu menu)
     {
         PauseGame();
 
-        if (menuStack.Count > 0)
+        if (menuStack.Count > 0 && !menu.IsModal)
         {
-            PauseMenu top = menuStack.Peek();
-
-            // Only hide previous menu if the new one is NOT modal
-            if (!menu.IsModal)
-            {
-                top.OnClose();
-            }
+            menuStack.Peek().OnClose();
         }
 
         menuStack.Push(menu);
         menu.OnOpen();
-    }
-
-    private void OnPause(InputAction.CallbackContext ctx)
-    {
-        if (menuStack.Count == 0)
-            OpenMenu(mainPauseMenu);
-        else
-            CloseMenu();
-    }
-
-    private void OnCancel(InputAction.CallbackContext ctx)
-    {
-        if (!GamePause.IsPaused)
-        {
-            return;
-        }
-
-        PauseMenuManager.Instance.CloseMenu();
     }
 
     public void CloseMenu()
@@ -88,47 +63,88 @@ public class PauseMenuManager : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Input Callbacks
+
+    private void OnPause(InputAction.CallbackContext ctx)
+    {
+        if (menuStack.Count == 0)
+        {
+            OpenMenu(mainPauseMenu);
+        }
+        else
+        {
+            CloseMenu();
+        }
+    }
+
+    private void OnCancel(InputAction.CallbackContext ctx)
+    {
+        if (!GamePause.IsPaused)
+        {
+            return;
+        }
+
+        CloseMenu();
+    }
+
+    #endregion
+
+    #region Game State
+
     private void PauseGame()
     {
-        GameIsPaused = GamePause.IsPaused;
+        gameIsPaused = GamePause.IsPaused;
+
         playerHUDCanvas.enabled = false;
         Time.timeScale = 0f;
         GamePause.SetPaused(true);
-        _playerInput.actions.FindActionMap("Gameplay").Disable(); // disable gameplay input map
-        _playerInput.actions.FindActionMap("UI").Enable(); // disable gameplay input map
-        FadeSFX(-80f); // sound fx muted
+
+        playerInput.actions.FindActionMap("Gameplay").Disable();
+        playerInput.actions.FindActionMap("UI").Enable();
+
+        FadeSFX(-80f);
     }
 
     private void ResumeGame()
     {
-        GameIsPaused = !GamePause.IsPaused;
+        gameIsPaused = !GamePause.IsPaused;
+
         playerHUDCanvas.enabled = true;
         Time.timeScale = 1f;
         GamePause.SetPaused(false);
-        _playerInput.actions.FindActionMap("Gameplay").Enable(); // enable gameplay input map
-        _playerInput.actions.FindActionMap("UI").Disable(); // disable gameplay input map
-        FadeSFX(0f); // sound fx normal volume
-    }   
 
-    #region Audio related functions and routines
+        playerInput.actions.FindActionMap("Gameplay").Enable();
+        playerInput.actions.FindActionMap("UI").Disable();
+
+        FadeSFX(0f);
+    }
+
+    #endregion
+
+    #region Audio
 
     private void FadeSFX(float targetVolume)
     {
-        if (sfxFadeRoutine != null)StopCoroutine(sfxFadeRoutine);
+        if (sfxFadeRoutine != null)
+        {
+            StopCoroutine(sfxFadeRoutine);
+        }
 
         sfxFadeRoutine = StartCoroutine(FadeSFXRoutine(targetVolume));
     }
 
     private IEnumerator FadeSFXRoutine(float targetVolume)
     {
-        audioMixer.GetFloat("sfxHandle", out float currentVolume);
+        audioMixer.GetFloat("sfxHandle", out float startVolume);
 
-        float time = 0f;
-        while (time < sfxFadeDuration)
+        float elapsed = 0f;
+        while (elapsed < sfxFadeDuration)
         {
-            time += Time.unscaledDeltaTime;
-            float v = Mathf.Lerp(currentVolume, targetVolume, time / sfxFadeDuration);
-            audioMixer.SetFloat("sfxHandle", v);
+            elapsed += Time.unscaledDeltaTime;
+            float volume = Mathf.Lerp(startVolume, targetVolume, elapsed / sfxFadeDuration);
+            audioMixer.SetFloat("sfxHandle", volume);
             yield return null;
         }
 
@@ -141,47 +157,42 @@ public class PauseMenuManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
     }
 
     private void OnEnable()
     {
-        var pauseAction = _playerInput.actions["PauseOpenClose"];
-        pauseAction.performed += OnPause;
+        pauseAction = playerInput.actions["PauseOpenClose"];
+        cancelAction = playerInput.actions["Cancel"];
 
-        _cancelAction = _playerInput.actions["Cancel"];
-        _cancelAction.performed += OnCancel;
+        pauseAction.performed += OnPause;
+        cancelAction.performed += OnCancel;
     }
 
     private void OnDisable()
     {
-        var pauseAction = _playerInput.actions["PauseOpenClose"];
-        pauseAction.performed -= OnPause;
+        if (pauseAction != null)
+        {
+            pauseAction.performed -= OnPause;
+        }
 
-        _cancelAction.performed -= OnCancel;
+        if (cancelAction != null)
+        {
+            cancelAction.performed -= OnCancel;
+        }
     }
 
     private void Update()
     {
-        if (GamePause.IsPaused)
-        {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.Confined;
-        }
-        else
-        {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-        }
+        Cursor.visible = GamePause.IsPaused && !inputManager.isGamepad;
+        Cursor.lockState = Cursor.visible ? CursorLockMode.Confined : CursorLockMode.Locked;
     }
 
     #endregion
 }
-

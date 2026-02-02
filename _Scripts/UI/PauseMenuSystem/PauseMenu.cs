@@ -16,9 +16,11 @@ public abstract class PauseMenu : MonoBehaviour
     public bool IsModal => isModal;
     private CanvasGroup canvasGroup;
     private Coroutine fadeRoutine;
+    private EventSystem eventSystem;
 
     protected virtual void Awake()
     {
+        eventSystem = EventSystem.current;
         canvasGroup = GetComponent<CanvasGroup>();
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
@@ -31,10 +33,16 @@ public abstract class PauseMenu : MonoBehaviour
         gameObject.SetActive(true);
         StartFade(1f);
 
-        if (defaultSelected != null)
+        // Clear selection always
+        eventSystem.SetSelectedGameObject(null);
+
+        // Only auto-select when using a gamepad
+        if (defaultSelected != null && PauseMenuManager.Instance != null)
         {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(defaultSelected);
+            if (PauseMenuManager.Instance.InputManager.isGamepad)
+            {
+                eventSystem.SetSelectedGameObject(defaultSelected);
+            }
         }
     }
 
@@ -73,5 +81,25 @@ public abstract class PauseMenu : MonoBehaviour
         canvasGroup.blocksRaycasts = visible;
 
         onComplete?.Invoke();
+    }
+
+    protected virtual void Update()
+    {
+        if (!GamePause.IsPaused || !gameObject.activeInHierarchy || PauseMenuManager.Instance == null)
+        {
+            return;
+        }
+
+        var inputManager = PauseMenuManager.Instance.InputManager;
+
+        if (!inputManager.isGamepad)
+        {
+            return;
+        }
+
+        if (defaultSelected != null && eventSystem.currentSelectedGameObject == null)
+        {
+            eventSystem.SetSelectedGameObject(defaultSelected);
+        }
     }
 }
