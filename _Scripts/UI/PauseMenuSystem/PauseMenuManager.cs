@@ -51,6 +51,14 @@ public class PauseMenuManager : MonoBehaviour
         menu.OnOpen();
     }
 
+    private void OnPause(InputAction.CallbackContext ctx)
+    {
+        if (menuStack.Count == 0)
+            OpenMenu(mainPauseMenu);
+        else
+            CloseMenu();
+    }
+
     private void OnCancel(InputAction.CallbackContext ctx)
     {
         if (!GamePause.IsPaused)
@@ -82,7 +90,7 @@ public class PauseMenuManager : MonoBehaviour
 
     private void PauseGame()
     {
-        GameIsPaused = true;
+        GameIsPaused = GamePause.IsPaused;
         playerHUDCanvas.enabled = false;
         Time.timeScale = 0f;
         GamePause.SetPaused(true);
@@ -93,7 +101,7 @@ public class PauseMenuManager : MonoBehaviour
 
     private void ResumeGame()
     {
-        GameIsPaused = false;
+        GameIsPaused = !GamePause.IsPaused;
         playerHUDCanvas.enabled = true;
         Time.timeScale = 1f;
         GamePause.SetPaused(false);
@@ -145,30 +153,24 @@ public class PauseMenuManager : MonoBehaviour
 
     private void OnEnable()
     {
+        var pauseAction = _playerInput.actions["PauseOpenClose"];
+        pauseAction.performed += OnPause;
+
         _cancelAction = _playerInput.actions["Cancel"];
         _cancelAction.performed += OnCancel;
     }
 
     private void OnDisable()
     {
+        var pauseAction = _playerInput.actions["PauseOpenClose"];
+        pauseAction.performed -= OnPause;
+
         _cancelAction.performed -= OnCancel;
     }
 
     private void Update()
     {
-        if (InputManager.instance.PauseOpenCloseInput)
-        {
-            if (menuStack.Count == 0)
-            {
-                OpenMenu(mainPauseMenu);
-            }
-            else
-            {
-                CloseMenu();
-            }
-        }
-
-        if (GameIsPaused)
+        if (GamePause.IsPaused)
         {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.Confined;
