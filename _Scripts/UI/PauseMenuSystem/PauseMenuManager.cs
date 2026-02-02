@@ -27,6 +27,7 @@ public class PauseMenuManager : MonoBehaviour
 
     [Header("Required Components")]
     [SerializeField] private PlayerInput _playerInput;
+    [SerializeField] private InputManager inputManager;
     [SerializeField] private Canvas playerHUDCanvas;
 
 
@@ -53,7 +54,9 @@ public class PauseMenuManager : MonoBehaviour
     private void OnCancel(InputAction.CallbackContext ctx)
     {
         if (!GamePause.IsPaused)
+        {
             return;
+        }
 
         PauseMenuManager.Instance.CloseMenu();
     }
