@@ -26,8 +26,8 @@ public class PlayerLocomotionPreset : ScriptableObject
     public float cameraWalkFOV = 57f;
     public float cameraRunFOV = 62f;
     public float cameraFOVSmoothing = 5f;
-    public float pitchUpLimit = 73f;
-    public float pitchDownLimit = 73f;
+    public float pitchUpLimit = 75f;
+    public float pitchDownLimit = 60f;
     public float walkTiltAngle = 1f;
     public float runTiltAngle = 2f;
     public float tiltSmoothing = 3f;

@@ -6,8 +6,8 @@ public class FlashlightHandler : MonoBehaviour
     private bool lastFlashlightState;
     public Light flashLight;
     public Transform cameraAnchor;        // The player's camera or hand anchor
-    public float walkSmoothing = 12f;
-    public float runSmoothing = 6f;
+    public float walkSmoothing = 7f;
+    public float runSmoothing = 5f;
     private float rotationSmooth;
 
     [Header("Flashlight Audio Components")]
