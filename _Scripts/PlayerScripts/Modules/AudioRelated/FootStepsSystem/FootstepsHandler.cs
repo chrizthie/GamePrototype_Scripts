@@ -1,129 +1,108 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 
-//[RequireComponent(typeof(AudioSource))]
 public class FootstepsHandler : MonoBehaviour
 {
     [Header("Footsteps Collections")]
-    [SerializeField] private List<AudioClip> footstepSounds = new List<AudioClip>(); // List of footstep sounds
-    [SerializeField] private AudioClip landingClip; // Sound played when landing
+    [SerializeField] private List<AudioClip> footstepSounds = new();
+    [SerializeField] private AudioClip landingClip;
 
     [Header("Footsteps Parameters")]
-    [SerializeField] [Range(0f, 1f)] private float m_RunStepLengthen; // How much faster the character runs compared to walking
-    [SerializeField] private float m_StepInterval; // Base time interval between steps
-    private float m_StepCycle; 
-    private float m_NextStep;
-    [SerializeField] private float crouchStepSpeed = 1.75f;// crouch walk
-    [SerializeField] private float walkStepSpeed = 1.85f; // all walk
-    [SerializeField] private float runStepSpeed = 3f; // run forward only
+    [SerializeField, Range(0f, 1f)] private float runStepLengthen = 0.7f;
+    [SerializeField] private float stepInterval = 1.72f;
+    [SerializeField] private float crouchStepSpeed = 1.75f;
+    [SerializeField] private float walkStepSpeed = 1.72f;
+    [SerializeField] private float runStepSpeed = 1.82f;
+
+    private float stepCycle;
+    private float nextStep;
 
     [Header("Required Components")]
-    [SerializeField] CharacterController characterController;
-    [SerializeField] PlayerLocomotion playerLocomotion;
-    [SerializeField] PlayerLocomotionPreset playerLocomotionPreset;
-    [SerializeField] PlayerVoice playerVoice;
-    [SerializeField] AudioSource footstepAudioSource;
-    
-    [SerializeField] FootstepsSwapper footstepsSwapper;
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private PlayerLocomotion playerLocomotion;
+    [SerializeField] private PlayerLocomotionPreset playerLocomotionPreset;
+    [SerializeField] private PlayerVoice playerVoice;
+    [SerializeField] private AudioSource footstepAudioSource;
+    [SerializeField] private FootstepsSwapper footstepsSwapper;
 
-    #region Steps Cycles & Audio Methods
+    private bool wasGrounded;
 
-    private void ProgressStepCycle(float speed)
+    private void Awake()
     {
-        if (characterController.velocity.sqrMagnitude > 0 && (playerLocomotion.moveInput.x != 0 || playerLocomotion.moveInput.y != 0))
-        {
-            m_StepCycle += (characterController.velocity.magnitude + (speed * ((playerLocomotion.isWalking || playerLocomotion.isWalkingBackwards) ? 1f : m_RunStepLengthen))) * Time.fixedDeltaTime;
-        }
+        if (characterController == null)
+            characterController = GetComponent<CharacterController>();
 
-        if (!(m_StepCycle > m_NextStep))
+        if (playerLocomotion == null)
+            playerLocomotion = GetComponent<PlayerLocomotion>();
+
+        if (playerVoice == null)
+            playerVoice = GetComponent<PlayerVoice>();
+
+        if (footstepsSwapper == null)
+            footstepsSwapper = GetComponent<FootstepsSwapper>();
+
+        if (footstepAudioSource == null)
+            footstepAudioSource = GetComponent<AudioSource>();
+
+        if (characterController == null ||
+            playerLocomotion == null ||
+            playerLocomotionPreset == null ||
+            footstepAudioSource == null)
         {
+            Debug.LogError("FootstepsHandler is missing required references.", this);
+            enabled = false;
             return;
         }
-
-        m_NextStep = m_StepCycle + m_StepInterval;
-
-        PlayFootStepAudio();
     }
-
-    private void PlayFootStepAudio()
-    {
-        footstepsSwapper.CheckLayers();
-
-        if (playerLocomotion.canMove)
-        {
-            if (!characterController.isGrounded)
-            {
-                return;
-            }
-
-            footstepsSwapper.UpdateFootstepType(playerLocomotion.isRunning);
-
-            int n = Random.Range(1, footstepSounds.Count);
-            footstepAudioSource.clip = footstepSounds[n];
-            footstepAudioSource.PlayOneShot(footstepAudioSource.clip);
-            // Move picked sound to index 0 so it's not picked next time
-            footstepSounds[n] = footstepSounds[0];
-            footstepSounds[0] = footstepAudioSource.clip;
-        }
-    }
-
-    private void PlayLandingAudio()
-    {
-        footstepsSwapper.CheckLayers();
-        footstepAudioSource.PlayOneShot(landingClip);
-        playerVoice.PlayLandingGruntAudio();
-    }
-
-    public void SwapFootsteps(FootstepsCollection collection)
-    {
-        footstepSounds.Clear();
-   
-        if (playerLocomotion.isRunning)
-        {
-            for (int i = 0; i < collection.runFootstepSounds.Count; i++)
-            {
-                footstepSounds.Add(collection.runFootstepSounds[i]);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < collection.walkFootstepSounds.Count; i++)
-            {
-                footstepSounds.Add(collection.walkFootstepSounds[i]);
-            }
-        }
-
-        landingClip = collection.landSound;
-    }
-
-    #endregion
-
-    #region Unity Methods
 
     private void OnValidate()
     {
         if (footstepsSwapper == null)
-        {
             footstepsSwapper = GetComponent<FootstepsSwapper>();
-        }
 
         if (playerVoice == null)
-        {
             playerVoice = GetComponent<PlayerVoice>();
-        }
+
+        if (footstepAudioSource == null)
+            footstepAudioSource = GetComponent<AudioSource>();
+
+        if (characterController == null)
+            characterController = GetComponent<CharacterController>();
+
+        if (playerLocomotion == null)
+            playerLocomotion = GetComponent<PlayerLocomotion>();
     }
 
     private void Start()
     {
-        m_StepCycle = 0f;
-        m_NextStep = m_StepCycle / 2f;
+        stepCycle = 0f;
+        nextStep = stepCycle / 2f;
+        wasGrounded = characterController != null && characterController.isGrounded;
     }
 
     private void Update()
-    {   
+    {
+        if (!enabled) return;
+
+        UpdateFootstepSettings();
+        HandleLanding();
+    }
+
+    private void FixedUpdate()
+    {
+        if (!enabled) return;
+
+        float moveSpeed = playerLocomotion.isRunning
+            ? playerLocomotionPreset.runSpeed
+            : playerLocomotionPreset.walkSpeed;
+
+        ProgressStepCycle(moveSpeed);
+    }
+
+    private void UpdateFootstepSettings()
+    {
         if (playerLocomotion.isCrouching)
-        {   
+        {
             footstepAudioSource.pitch = 1.2f;
             footstepAudioSource.volume = 0.6f;
         }
@@ -133,32 +112,113 @@ public class FootstepsHandler : MonoBehaviour
             footstepAudioSource.volume = 0.9f;
         }
 
-        // Adjust step interval based on player state
         if (playerLocomotion.isRunning && !playerLocomotion.isWalkingBackwards)
-        {
-            m_StepInterval = runStepSpeed;
-        }
+            stepInterval = runStepSpeed;
         else if (playerLocomotion.isCrouching)
-        {
-            m_StepInterval = crouchStepSpeed;
-        }
+            stepInterval = crouchStepSpeed;
         else
-        {
-            m_StepInterval = walkStepSpeed;
-        }
+            stepInterval = walkStepSpeed;
+    }
 
-        // Landing sound
-        if (characterController.isGrounded && playerLocomotion.airTime > 0.4f)
+    private void HandleLanding()
+    {
+        bool isGrounded = characterController.isGrounded;
+        bool justLanded = !wasGrounded && isGrounded;
+
+        if (justLanded && playerLocomotion.airTime > 0.4f)
         {
             PlayLandingAudio();
         }
+
+        wasGrounded = isGrounded;
     }
 
-    private void FixedUpdate()
+    private void ProgressStepCycle(float speed)
     {
-        ProgressStepCycle(speed: playerLocomotion.isRunning ? playerLocomotionPreset.runSpeed : playerLocomotionPreset.walkSpeed);
+        if (!playerLocomotion.canMove)
+            return;
+
+        if (!characterController.isGrounded)
+            return;
+
+        if (characterController.velocity.sqrMagnitude <= 0.01f)
+            return;
+
+        if (playerLocomotion.moveInput.sqrMagnitude <= 0.01f)
+            return;
+
+        float speedMultiplier = (playerLocomotion.isWalking || playerLocomotion.isWalkingBackwards)
+            ? 1f
+            : runStepLengthen;
+
+        stepCycle += (characterController.velocity.magnitude + (speed * speedMultiplier)) * Time.fixedDeltaTime;
+
+        if (stepCycle <= nextStep)
+            return;
+
+        nextStep = stepCycle + stepInterval;
+        PlayFootStepAudio();
     }
 
+    private void PlayFootStepAudio()
+    {
+        if (!playerLocomotion.canMove)
+            return;
 
-    #endregion
+        if (!characterController.isGrounded)
+            return;
+
+        if (footstepsSwapper != null)
+        {
+            footstepsSwapper.CheckLayers();
+            footstepsSwapper.UpdateFootstepType(playerLocomotion.isRunning);
+        }
+
+        if (footstepSounds == null || footstepSounds.Count == 0)
+            return;
+
+        if (footstepSounds.Count == 1)
+        {
+            footstepAudioSource.PlayOneShot(footstepSounds[0]);
+            return;
+        }
+
+        int n = Random.Range(1, footstepSounds.Count);
+        AudioClip clip = footstepSounds[n];
+
+        footstepAudioSource.PlayOneShot(clip);
+
+        // Move picked sound to index 0 so it won't repeat immediately
+        footstepSounds[n] = footstepSounds[0];
+        footstepSounds[0] = clip;
+    }
+
+    private void PlayLandingAudio()
+    {
+        if (footstepsSwapper != null)
+            footstepsSwapper.CheckLayers();
+
+        if (landingClip != null)
+            footstepAudioSource.PlayOneShot(landingClip);
+
+        if (playerVoice != null)
+            playerVoice.PlayLandingGruntAudio();
+    }
+
+    public void SwapFootsteps(FootstepsCollection collection)
+    {
+        if (collection == null)
+            return;
+
+        footstepSounds.Clear();
+
+        List<AudioClip> sourceList = playerLocomotion.isRunning
+            ? collection.runFootstepSounds
+            : collection.walkFootstepSounds;
+
+        if (sourceList != null && sourceList.Count > 0)
+            footstepSounds.AddRange(sourceList);
+
+        landingClip = collection.landSound;
+    }
 }

@@ -16,16 +16,16 @@ MonoBehaviour:
   runningAcceleration: 8
   crouchAcceleration: 2
   crouchSpeed: 0.85
-  walkSpeed: 1.45
-  runSpeed: 2.65
+  walkSpeed: 1.4
+  runSpeed: 2.5
   mouseSensitivity: 0.5
   mouseMin: 0.01
   mouseMax: 0.19
   controllerSensitivity: 0.5
   controllerMin: 0.2
   controllerMax: 2.4
-  cameraWalkFOV: 57
-  cameraRunFOV: 62
+  cameraWalkFOV: 55
+  cameraRunFOV: 60
   cameraFOVSmoothing: 5
   pitchUpLimit: 75
   pitchDownLimit: 60

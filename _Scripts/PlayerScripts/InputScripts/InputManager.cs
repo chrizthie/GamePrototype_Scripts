@@ -59,6 +59,16 @@ public class InputManager : MonoBehaviour
 
     #endregion
 
+    #region Public Methods for External Control
+
+    public void ForceStandFromSprint()
+    {
+        currentInput.crouch = false;
+        lastCrouchTime = Time.time;
+    }
+
+    #endregion
+
     #region Inputs Handled in Update for better control
 
     private void OnRun()

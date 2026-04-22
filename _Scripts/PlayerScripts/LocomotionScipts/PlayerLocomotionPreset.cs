@@ -8,8 +8,8 @@ public class PlayerLocomotionPreset : ScriptableObject
     public float runningAcceleration = 8f;
     public float crouchAcceleration = 2f;
     public float crouchSpeed = 0.85f;
-    public float walkSpeed = 1.45f;
-    public float runSpeed = 4.45f;
+    public float walkSpeed = 1.4f;
+    public float runSpeed = 2.5f;
 
     [Header("Mouse Parameters")]
     public float mouseSensitivity = 0.45f; // mouse sensitivity
@@ -23,8 +23,8 @@ public class PlayerLocomotionPreset : ScriptableObject
 
 
     [Header("Camera Parameters")]
-    public float cameraWalkFOV = 57f;
-    public float cameraRunFOV = 62f;
+    public float cameraWalkFOV = 55f;
+    public float cameraRunFOV = 60f;
     public float cameraFOVSmoothing = 5f;
     public float pitchUpLimit = 75f;
     public float pitchDownLimit = 60f;

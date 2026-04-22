@@ -25,6 +25,32 @@ public class PlayerLocomotion : MonoBehaviour
     private AnimatorStateInfo currentAnimState;
     #endregion
 
+    #region Movement Feel
+    [Header("Movement Feel")]
+    [SerializeField] private float walkAcceleration = 9f;
+    [SerializeField] private float walkDeceleration = 12f;
+
+    [SerializeField] private float runAcceleration = 7f;
+    [SerializeField] private float runDeceleration = 10f;
+
+    [SerializeField] private float crouchAcceleration = 6f;
+    [SerializeField] private float crouchDeceleration = 14f;
+
+    [SerializeField] private float airAccelerationMultiplier = 0.35f;
+    [SerializeField] private float backwardSpeedMultiplier = 0.72f;
+    [SerializeField] private float strafeSpeedMultiplier = 0.85f;
+
+    [SerializeField] private float sprintForwardRequirement = 0.55f;
+    [SerializeField] private float sprintSideLimit = 0.85f;
+
+    [SerializeField] private float crouchMomentumDamping = 0.8f;
+    [SerializeField] private float sprintExitDragDuration = 0.18f;
+    [SerializeField] private float sprintExitDragMultiplier = 1.35f;
+
+    private float sprintExitDragTimer;
+
+    #endregion
+
     #region Landing Parameters
     [Header("Landing Parameters")]
     public bool isMovementPaused = false;
@@ -40,8 +66,8 @@ public class PlayerLocomotion : MonoBehaviour
     private float standingHeight = 1.72f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
-    private float standingCenter = 0.86f;
-    private float crouchingCenter = 0.595f;
+    //private float standingCenter = 0.86f;
+    //private float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
     private float checkRadius = 0.25f; // width of the check sphere
@@ -120,19 +146,24 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void MovementFlags()
     {
-        // grounded
         isGrounded = characterController.isGrounded;
 
-        // movement state
-        inPlace = currentSpeed <= 0.01f;
+        Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0f, currentVelocity.z);
+        bool hasActualMovement = horizontalVelocity.magnitude > 0.05f;
 
-        isWalkingBackwards = moveInput.y < 0f;
+        inPlace = !hasActualMovement;
+        isWalkingBackwards = moveInput.y < -0.1f && hasActualMovement;
 
-        isWalking = !runInput && !inPlace && moveInput.y > 0f;
+        // run availability
+        canRun = !blockAheadDetection.blocked;
 
-        isRunning = runInput && moveInput.y > 0f && !inPlace && !isCrouching;
+        // stricter sprint rule:
+        // must be clearly forward, not mostly strafing, not crouching, not blocked
+        bool sprintDirectionValid =
+            moveInput.y > sprintForwardRequirement &&
+            Mathf.Abs(moveInput.x) < sprintSideLimit;
 
-        // crouch
+        // crouch from toggled input
         bool wantsToCrouch = crouchInput;
 
         if (wantsToCrouch)
@@ -144,92 +175,183 @@ public class PlayerLocomotion : MonoBehaviour
             isCrouching = false;
         }
 
-        // crouch always cancels run
-        if (isCrouching)
+        // if player sprints while crouched, force stand and clear crouch toggle
+        bool wantsToSprintFromCrouch =
+            runInput &&
+            sprintDirectionValid &&
+            hasActualMovement &&
+            isCrouching &&
+            canRun &&
+            staminaSystem.playerStamina > 0f &&
+            !obstacleOverhead;
+
+        if (wantsToSprintFromCrouch)
         {
-            runInput = false;
+            isCrouching = false;
+            crouchInput = false;
+            inputManager.ForceStandFromSprint();
         }
 
-        // run availability
-        canRun = !blockAheadDetection.blocked;
+        bool canSprintNow =
+            runInput &&
+            sprintDirectionValid &&
+            hasActualMovement &&
+            !isCrouching &&
+            canRun &&
+            staminaSystem.playerStamina > 0f;
 
-        // detect run start (state edge)
+        isRunning = canSprintNow;
+        isWalking = hasActualMovement && !isRunning && !isCrouching;
+
+        // detect run start / exit
         justStartedRunning = !wasRunning && isRunning;
+
+        if (wasRunning && !isRunning)
+        {
+            sprintExitDragTimer = sprintExitDragDuration;
+        }
+
         wasRunning = isRunning;
 
-        // PUT THIS HERE — LAST LINES ONLY
+        // detect crouch start
         justStartedCrouching = !wasCrouching && isCrouching;
         wasCrouching = isCrouching;
     }
 
     private void MoveUpdate()
     {
-        // Gamepad = analog
+        // INPUT SHAPING
         if (inputManager.isGamepad)
         {
-            // deadzone
-            if (moveInput.magnitude < 0.15f) moveInput = Vector2.zero;
+            if (moveInput.magnitude < 0.15f)
+                moveInput = Vector2.zero;
 
             moveInput = Vector2.ClampMagnitude(moveInput, 1f);
         }
-        // Keyboard = digital
         else
         {
             moveInput.x = moveInput.x > 0 ? 1f : (moveInput.x < 0 ? -1f : 0f);
             moveInput.y = moveInput.y > 0 ? 1f : (moveInput.y < 0 ? -1f : 0f);
         }
 
-        Vector3 motion = transform.forward * moveInput.y + transform.right * moveInput.x;
-        motion.y = 0f;
-        motion.Normalize();
+        // DESIRED MOVE DIRECTION
+        Vector3 rawMove = transform.forward * moveInput.y + transform.right * moveInput.x;
+        rawMove.y = 0f;
 
-        // determine max speed
+        Vector3 motion = rawMove.sqrMagnitude > 0.001f ? rawMove.normalized : Vector3.zero;
+
+        // BASE SPEED BY STATE
+        float targetMaxSpeed;
+
         if (isCrouching)
         {
-            maxSpeed = preset.crouchSpeed;
+            targetMaxSpeed = preset.crouchSpeed;
         }
-        else if (runInput && canRun && !isWalkingBackwards && staminaSystem.playerStamina > 0f)
+        else if (isRunning)
         {
-            maxSpeed = preset.runSpeed;
+            targetMaxSpeed = preset.runSpeed;
         }
         else
         {
-            maxSpeed = preset.walkSpeed;
+            targetMaxSpeed = preset.walkSpeed;
         }
 
-        // hard brake when entering crouch
+        // DIRECTIONAL PENALTIES
+        // makes backwards and strafing feel less dominant / less shooter-like
+        float directionalMultiplier = 1f;
+
+        if (moveInput.y < -0.1f)
+        {
+            directionalMultiplier *= backwardSpeedMultiplier;
+        }
+
+        if (Mathf.Abs(moveInput.x) > 0.1f && moveInput.y <= 0.1f)
+        {
+            directionalMultiplier *= strafeSpeedMultiplier;
+        }
+
+        targetMaxSpeed *= directionalMultiplier;
+
+        Vector3 targetVelocity = motion * targetMaxSpeed;
+
+        // ACCEL / DECEL PER STATE
+        float acceleration;
+        float deceleration;
+
+        if (isCrouching)
+        {
+            acceleration = crouchAcceleration;
+            deceleration = crouchDeceleration;
+        }
+        else if (isRunning)
+        {
+            acceleration = runAcceleration;
+            deceleration = runDeceleration;
+        }
+        else
+        {
+            acceleration = walkAcceleration;
+            deceleration = walkDeceleration;
+        }
+
+        // weaker control in air
+        if (!isGrounded)
+        {
+            acceleration *= airAccelerationMultiplier;
+            deceleration *= airAccelerationMultiplier;
+        }
+
+        // crouch start: damp momentum instead of chopping it too harshly
         if (justStartedCrouching)
         {
-            currentVelocity *= 0.5f;
+            currentVelocity *= crouchMomentumDamping;
         }
 
-        // accelerate to target speed
-        if (motion.sqrMagnitude >= 0.01f)
+        // sprint exit drag: adds a bit of commitment when leaving sprint
+        if (sprintExitDragTimer > 0f)
         {
-            currentVelocity = Vector3.MoveTowards(currentVelocity, motion * maxSpeed, maxAcceleration * Time.deltaTime);
+            sprintExitDragTimer -= Time.deltaTime;
+            deceleration *= sprintExitDragMultiplier;
+        }
+
+        // APPLY MOVEMENT
+        if (motion.sqrMagnitude > 0.001f)
+        {
+            currentVelocity = Vector3.MoveTowards(
+                currentVelocity,
+                targetVelocity,
+                acceleration * Time.deltaTime
+            );
         }
         else
         {
-            currentVelocity = Vector3.MoveTowards(currentVelocity, Vector3.zero, maxAcceleration * Time.deltaTime);
+            currentVelocity = Vector3.MoveTowards(
+                currentVelocity,
+                Vector3.zero,
+                deceleration * Time.deltaTime
+            );
         }
 
-        // grounding safety
+        // GROUNDING
         if (isGrounded && verticalVelocity < 0f)
         {
-            verticalVelocity = -5f; // small stick force
+            verticalVelocity = -5f;
         }
 
         if (!isGrounded && airTime < 0.05f)
         {
-            verticalVelocity = 0f; // prevent micro-snaps
+            verticalVelocity = 0f;
         }
 
-        // gravity application
+        // GRAVITY
         if (!isGrounded)
         {
             airTime += Time.deltaTime;
+            gravityScale = Mathf.Min(
+                gravityScale + preset.rampingGravity * Time.deltaTime,
+                preset.maxGravity
+            );
 
-            gravityScale = Mathf.Min(gravityScale + preset.rampingGravity * Time.deltaTime, preset.maxGravity);
             verticalVelocity += Physics.gravity.y * gravityScale * Time.deltaTime;
         }
         else
@@ -238,30 +360,36 @@ public class PlayerLocomotion : MonoBehaviour
             airTime = 0f;
         }
 
-        // move the character
+        // FINAL MOVE
         Vector3 fullVelocity = new Vector3(currentVelocity.x, verticalVelocity, currentVelocity.z);
-
         characterController.Move(fullVelocity * Time.deltaTime);
 
-        // updating speed
-        currentSpeed = currentVelocity.magnitude;
+        currentSpeed = new Vector3(currentVelocity.x, 0f, currentVelocity.z).magnitude;
+    }
+
+    private void SetControllerHeightSmooth(float targetHeight)
+    {
+        float newHeight = Mathf.MoveTowards(
+            characterController.height,
+            targetHeight,
+            crouchTransitionSpeed * Time.deltaTime
+        );
+
+        characterController.height = newHeight;
+
+        Vector3 center = characterController.center;
+        center.y = newHeight * 0.5f;
+        characterController.center = center;
     }
 
     private void Crouch()
     {
-        if (isCrouching)
-        {
-            if (currentAnimState.shortNameHash != idleToCrouchHash && currentAnimState.shortNameHash != crouchToIdleHash)
-            {
-                // center transition
-                Vector3 center = characterController.center;
-                center.y = crouchingCenter;
-                characterController.center = center;
-                // height transition
-                characterController.height = Mathf.Lerp(characterController.height, crouchingHeight, crouchTransitionSpeed * Time.deltaTime);
-                maxAcceleration = preset.crouchAcceleration;
-            }
-        }
+        if (!isCrouching) return;
+
+        if (currentAnimState.shortNameHash == idleToCrouchHash || currentAnimState.shortNameHash == crouchToIdleHash)
+            return;
+
+        SetControllerHeightSmooth(crouchingHeight);
     }
 
     private void CheckOverhead()
@@ -275,26 +403,12 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void StandUp()
     {
-        if (!isCrouching && !obstacleOverhead)
-        {
-            if (currentAnimState.shortNameHash != idleToCrouchHash && currentAnimState.shortNameHash != crouchToIdleHash)
-            {
-                Vector3 center = characterController.center;
-                center.y = standingCenter;
-                characterController.center = center;
+        if (isCrouching || obstacleOverhead) return;
 
-                characterController.height = Mathf.Lerp(characterController.height, standingHeight, crouchTransitionSpeed * Time.deltaTime);
+        if (currentAnimState.shortNameHash == idleToCrouchHash || currentAnimState.shortNameHash == crouchToIdleHash)
+            return;
 
-                if (isRunning)
-                {
-                    maxAcceleration = preset.runningAcceleration;
-                }
-                else
-                {
-                    maxAcceleration = preset.normalAcceleration;
-                }
-            }
-        }
+        SetControllerHeightSmooth(standingHeight);
     }
 
     private void PlayerLanding()
@@ -341,12 +455,17 @@ public class PlayerLocomotion : MonoBehaviour
     {   
         float targetFOV = preset.cameraWalkFOV;
 
-        if (isRunning)
-        {   
-            float speedRatio = currentSpeed / preset.runSpeed;
+        float speedRatio = Mathf.Clamp01(currentSpeed / preset.runSpeed);
 
-            targetFOV = Mathf.Lerp(preset.cameraWalkFOV, preset.cameraRunFOV, speedRatio);
+        if (isRunning)
+        {
+        targetFOV = Mathf.Lerp(preset.cameraWalkFOV, preset.cameraRunFOV, speedRatio);
         }
+        else
+        {
+        // slight carryover makes sprint exit feel less abrupt
+        targetFOV = Mathf.Lerp(preset.cameraWalkFOV, preset.cameraRunFOV, speedRatio * 0.35f);
+    }
 
         firstPersonCamera.Lens.FieldOfView = Mathf.Lerp(firstPersonCamera.Lens.FieldOfView, targetFOV, preset.cameraFOVSmoothing * Time.deltaTime);
 
