@@ -11,6 +11,9 @@ using UnityEngine.Windows;
 
 public class PlayerLocomotion : MonoBehaviour
 {
+    [Header("Animator Movement")]
+    public Vector2 movementBlendVector { get; private set; }
+
     #region Movement Parameters
     [Header("Movement Parameters")]
     public float maxSpeed;
@@ -66,8 +69,6 @@ public class PlayerLocomotion : MonoBehaviour
     private float standingHeight = 1.72f;
     private float crouchingHeight = 1.2f;
     private float crouchTransitionSpeed = 15f;
-    //private float standingCenter = 0.86f;
-    //private float crouchingCenter = 0.595f;
     private int idleToCrouchHash;
     private int crouchToIdleHash;
     private float checkRadius = 0.25f; // width of the check sphere
@@ -143,6 +144,26 @@ public class PlayerLocomotion : MonoBehaviour
     }
 
     #region Controller Methods
+
+    private void UpdateMovementBlendVector()
+    {
+        float x = 0f;
+        float y = 0f;
+
+        float snapValue = isRunning ? 2f : 1f;
+
+        if (moveInput.x > 0.1f)
+            x = snapValue;
+        else if (moveInput.x < -0.1f)
+            x = -snapValue;
+
+        if (moveInput.y > 0.1f)
+            y = snapValue;
+        else if (moveInput.y < -0.1f)
+            y = -snapValue;
+
+        movementBlendVector = new Vector2(x, y);
+    }
 
     private void MovementFlags()
     {
@@ -535,6 +556,7 @@ public class PlayerLocomotion : MonoBehaviour
         currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
         
         MovementFlags();
+        UpdateMovementBlendVector();
         CheckOverhead();
         PlayerLanding();
 

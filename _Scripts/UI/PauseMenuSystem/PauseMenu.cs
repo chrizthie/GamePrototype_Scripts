@@ -25,7 +25,6 @@ public abstract class PauseMenu : MonoBehaviour
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
-        gameObject.SetActive(false);
     }
 
     public virtual void OnOpen()
@@ -53,8 +52,15 @@ public abstract class PauseMenu : MonoBehaviour
 
     private void StartFade(float targetAlpha, System.Action onComplete = null)
     {
+        if (!gameObject.activeInHierarchy)
+        {
+            gameObject.SetActive(true);
+        }
+
         if (fadeRoutine != null)
+        {
             StopCoroutine(fadeRoutine);
+        }
 
         fadeRoutine = StartCoroutine(FadeRoutine(targetAlpha, onComplete));
     }
@@ -79,6 +85,8 @@ public abstract class PauseMenu : MonoBehaviour
         bool visible = targetAlpha > 0.9f;
         canvasGroup.interactable = visible;
         canvasGroup.blocksRaycasts = visible;
+
+        fadeRoutine = null;
 
         onComplete?.Invoke();
     }
