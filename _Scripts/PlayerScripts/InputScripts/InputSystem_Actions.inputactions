@@ -35,9 +35,9 @@
                 },
                 {
                     "name": "Run",
-                    "type": "PassThrough",
+                    "type": "Button",
                     "id": "641cd816-40e6-41b4-8c3d-04687c349290",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -55,6 +55,15 @@
                     "name": "Crouch",
                     "type": "Button",
                     "id": "c4b3e610-d98b-478b-bc98-44e10b6aca74",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Zoom",
+                    "type": "Button",
+                    "id": "3697378d-fa42-4c98-b632-a35b2a2cea39",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -279,6 +288,28 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fd78551b-a230-4c10-ae4f-b519b632b61e",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3200f40f-f5c7-4fcc-81b8-1c19d13de66e",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Zoom",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

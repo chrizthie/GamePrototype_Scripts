@@ -24,32 +24,6 @@ public class AreaLoadManager : MonoBehaviour
         Instance = this;
     }
 
-    private void DisableDirectionalLightShadowsInScene(string sceneName)
-    {
-        if (string.IsNullOrEmpty(sceneName))
-            return;
-
-        Scene scene = SceneManager.GetSceneByName(sceneName);
-
-        if (!scene.isLoaded)
-            return;
-
-        GameObject[] rootObjects = scene.GetRootGameObjects();
-
-        foreach (GameObject root in rootObjects)
-        {
-            Light[] lights = root.GetComponentsInChildren<Light>(true);
-
-            foreach (Light light in lights)
-            {
-                if (light.type == LightType.Directional)
-                {
-                    light.shadows = LightShadows.None;
-                }
-            }
-        }
-    }
-
     public void SetCurrentArea(string sceneName)
     {
         currentAreaSceneName = sceneName;
@@ -57,7 +31,8 @@ public class AreaLoadManager : MonoBehaviour
 
     public void LoadArea(string targetSceneName, string targetSpawnPointName)
     {
-        if (isLoading) return;
+        if (isLoading)
+            return;
 
         StartCoroutine(LoadAreaRoutine(targetSceneName, targetSpawnPointName));
     }
@@ -66,34 +41,80 @@ public class AreaLoadManager : MonoBehaviour
     {
         isLoading = true;
 
-        DisableDirectionalLightShadowsInScene(currentAreaSceneName);
+        Scene previousScene = default;
+
+        if (!string.IsNullOrEmpty(currentAreaSceneName))
+        {
+            previousScene = SceneManager.GetSceneByName(currentAreaSceneName);
+
+            if (previousScene.IsValid() && previousScene.isLoaded)
+            {
+                // Disable old scene environment immediately
+                SetEnvironmentEnabled(previousScene, false);
+            }
+        }
 
         if (!SceneManager.GetSceneByName(targetSceneName).isLoaded)
         {
-            AsyncOperation loadOperation = SceneManager.LoadSceneAsync(
-                targetSceneName,
-                LoadSceneMode.Additive
-            );
+            AsyncOperation loadOperation =
+                SceneManager.LoadSceneAsync(
+                    targetSceneName,
+                    LoadSceneMode.Additive);
 
             while (!loadOperation.isDone)
                 yield return null;
         }
 
         Scene targetScene = SceneManager.GetSceneByName(targetSceneName);
+
+        // Enable target scene environment
+        SetEnvironmentEnabled(targetScene, true);
+
         SceneManager.SetActiveScene(targetScene);
+
+        Debug.Log($"Active Scene: {targetScene.name}");
+
+        // Give HDRP a moment to settle
+        yield return null;
+        yield return null;
 
         MovePlayerToSpawn(targetSpawnPointName);
 
-        if (!string.IsNullOrEmpty(currentAreaSceneName) && currentAreaSceneName != targetSceneName)
+        if (!string.IsNullOrEmpty(currentAreaSceneName) &&
+            currentAreaSceneName != targetSceneName)
         {
-            AsyncOperation unloadOperation = SceneManager.UnloadSceneAsync(currentAreaSceneName);
+            AsyncOperation unloadOperation =
+                SceneManager.UnloadSceneAsync(currentAreaSceneName);
 
-            while (unloadOperation != null && !unloadOperation.isDone)
+            while (unloadOperation != null &&
+                   !unloadOperation.isDone)
+            {
                 yield return null;
+            }
         }
 
         currentAreaSceneName = targetSceneName;
         isLoading = false;
+    }
+
+    private const string LightingRootTag = "LightingRoot";
+
+    private void SetEnvironmentEnabled(Scene scene, bool enabled)
+    {
+        if (!scene.IsValid() || !scene.isLoaded)
+            return;
+
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            if (root.CompareTag(LightingRootTag))
+            {
+                root.SetActive(enabled);
+
+                Debug.Log(
+                    $"Environment {(enabled ? "Enabled" : "Disabled")}: " +
+                    $"{root.name} ({scene.name})");
+            }
+        }
     }
 
     private void MovePlayerToSpawn(string spawnPointName)
