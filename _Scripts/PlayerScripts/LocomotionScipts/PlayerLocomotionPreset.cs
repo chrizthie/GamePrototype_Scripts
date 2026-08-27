@@ -4,9 +4,12 @@ using UnityEngine;
 public class PlayerLocomotionPreset : ScriptableObject
 {
     [Header("Movement Parameters")]
-    public float normalAcceleration = 6f;
+    public float walkAcceleration = 6f;
+    public float walkDeceleration = 10f;
     public float runningAcceleration = 8f;
+    public float runningDeceleration = 10f;
     public float crouchAcceleration = 2f;
+    public float crouchDeceleration = 4f;
     public float crouchSpeed = 0.85f;
     public float walkSpeed = 1.4f;
     public float runSpeed = 2.5f;
@@ -25,6 +28,8 @@ public class PlayerLocomotionPreset : ScriptableObject
     [Header("Camera Parameters")]
     public float cameraWalkFOV = 55f;
     public float cameraRunFOV = 60f;
+    public float cameraZoomFOV = 40f;
+    public float cameraFOVChangeSpeed = 10f;
     public float cameraFOVSmoothing = 5f;
     public float pitchUpLimit = 75f;
     public float pitchDownLimit = 60f;

@@ -9,4 +9,5 @@ public struct PlayerInputState
     public bool run;
     public bool crouch;
     public bool flashlight;
+    public bool zoom;
 }

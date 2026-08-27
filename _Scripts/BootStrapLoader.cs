@@ -26,6 +26,6 @@ public class BootstrapLoader : MonoBehaviour
         Scene loadedScene = SceneManager.GetSceneByName(firstLevelSceneName);
         SceneManager.SetActiveScene(loadedScene);
 
-        AreaLoadManager.Instance.SetCurrentArea(firstLevelSceneName);
+        AreaLoadManager.Instance.LoadArea(firstLevelSceneName, "TestLevelSpawn");
     }
 }

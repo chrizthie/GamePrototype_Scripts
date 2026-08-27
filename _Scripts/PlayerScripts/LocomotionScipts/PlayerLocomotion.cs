@@ -30,14 +30,6 @@ public class PlayerLocomotion : MonoBehaviour
 
     #region Movement Feel
     [Header("Movement Feel")]
-    [SerializeField] private float walkAcceleration = 9f;
-    [SerializeField] private float walkDeceleration = 12f;
-
-    [SerializeField] private float runAcceleration = 7f;
-    [SerializeField] private float runDeceleration = 10f;
-
-    [SerializeField] private float crouchAcceleration = 6f;
-    [SerializeField] private float crouchDeceleration = 14f;
 
     [SerializeField] private float airAccelerationMultiplier = 0.35f;
     [SerializeField] private float backwardSpeedMultiplier = 0.72f;
@@ -88,10 +80,17 @@ public class PlayerLocomotion : MonoBehaviour
     #endregion
 
     #region Looking Parameters
+
     [Header("Looking Parameters")]
     private float maxTiltAngle;
     private float currentPitch = 0f;
     private float currentTilt = 0f;
+
+    [Header("Reading Look Lock")]
+    private Vector3 readingLookTarget;
+    private bool hasReadingLookTarget;
+    [SerializeField] private float readingLookLockAmount;
+    [SerializeField] private float readingLookLockSpeed = 10f;
 
     public float CurrentPitch
     {
@@ -99,9 +98,14 @@ public class PlayerLocomotion : MonoBehaviour
 
         set
         {
-            currentPitch = Mathf.Clamp(value, -preset.pitchUpLimit, preset.pitchDownLimit);
+            currentPitch = Mathf.Clamp(
+                value,
+                -preset.pitchUpLimit,
+                preset.pitchDownLimit
+            );
         }
     }
+
     #endregion
 
     #region Physics Parameters
@@ -301,18 +305,18 @@ public class PlayerLocomotion : MonoBehaviour
 
         if (isCrouching)
         {
-            acceleration = crouchAcceleration;
-            deceleration = crouchDeceleration;
+            acceleration = preset.crouchAcceleration;
+            deceleration = preset.crouchDeceleration;
         }
         else if (isRunning)
         {
-            acceleration = runAcceleration;
-            deceleration = runDeceleration;
+            acceleration = preset.runningAcceleration;
+            deceleration = preset.runningDeceleration;
         }
         else
         {
-            acceleration = walkAcceleration;
-            deceleration = walkDeceleration;
+            acceleration = preset.walkAcceleration;
+            deceleration = preset.walkDeceleration;
         }
 
         // weaker control in air
@@ -450,45 +454,119 @@ public class PlayerLocomotion : MonoBehaviour
 
         if (inputManager.isGamepad)
         {
-            lookSensitivity = Mathf.Lerp(preset.controllerMin, preset.controllerMax, preset.controllerSensitivity);
-        } else
+            lookSensitivity = Mathf.Lerp(
+                preset.controllerMin,
+                preset.controllerMax,
+                preset.controllerSensitivity
+            );
+        }
+        else
         {
-            lookSensitivity = Mathf.Lerp(preset.mouseMin, preset.mouseMax, preset.mouseSensitivity);
+            lookSensitivity = Mathf.Lerp(
+                preset.mouseMin,
+                preset.mouseMax,
+                preset.mouseSensitivity
+            );
         }
 
         if (!lookEnabled)
         {
             return;
         }
-        
-        Vector2 input = new Vector2(lookInput.x * lookSensitivity, lookInput.y * lookSensitivity);
 
-        // looking up and down
+        // Mouse/gamepad influence gradually decreases
+        float inputMultiplier = 1f - readingLookLockAmount;
+
+        Vector2 input = new Vector2(
+            lookInput.x * lookSensitivity * inputMultiplier,
+            lookInput.y * lookSensitivity * inputMultiplier
+        );
+
+        // Normal player input
         CurrentPitch -= input.y;
+
+        transform.Rotate(
+            Vector3.up * input.x
+        );
+
+        // Automatic rotation toward readable
+        if (hasReadingLookTarget &&
+            readingLookLockAmount > 0f)
+        {
+            Vector3 direction =
+                readingLookTarget -
+                firstPersonCamera.transform.position;
+
+            // Prevent invalid rotation
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                // -------------------------
+                // HORIZONTAL ROTATION
+                // -------------------------
+
+                Vector3 flatDirection =
+                    new Vector3(
+                        direction.x,
+                        0f,
+                        direction.z
+                    );
+
+                if (flatDirection.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetYaw =
+                        Quaternion.LookRotation(flatDirection);
+
+                    transform.rotation =
+                        Quaternion.Slerp(
+                            transform.rotation,
+                            targetYaw,
+                            readingLookLockSpeed *
+                            readingLookLockAmount *
+                            Time.deltaTime
+                        );
+                }
+
+                // -------------------------
+                // VERTICAL ROTATION
+                // -------------------------
+
+                float horizontalDistance =
+                    Mathf.Sqrt(
+                        direction.x * direction.x +
+                        direction.z * direction.z
+                    );
+
+                float targetPitch =
+                    -Mathf.Atan2(
+                        direction.y,
+                        horizontalDistance
+                    ) * Mathf.Rad2Deg;
+
+                CurrentPitch = Mathf.Lerp(
+                    CurrentPitch,
+                    targetPitch,
+                    readingLookLockSpeed *
+                    readingLookLockAmount *
+                    Time.deltaTime
+                );
+            }
+        }
 
         firstPersonCamera.transform.localRotation = Quaternion.Euler(CurrentPitch, 0f, currentTilt);
 
-        // looking left and right
-        transform.Rotate(Vector3.up * input.x);
+        Debug.DrawLine(firstPersonCamera.transform.position, readingLookTarget, Color.red);
     }
 
     private void CameraUpdate()
-    {   
-        float targetFOV = preset.cameraWalkFOV;
-
-        float speedRatio = Mathf.Clamp01(currentSpeed / preset.runSpeed);
-
+    {
         if (isRunning)
         {
-        targetFOV = Mathf.Lerp(preset.cameraWalkFOV, preset.cameraRunFOV, speedRatio);
-        }
-        else
-        {
-        // slight carryover makes sprint exit feel less abrupt
-        targetFOV = Mathf.Lerp(preset.cameraWalkFOV, preset.cameraRunFOV, speedRatio * 0.35f);
-    }
+            float speedRatio = Mathf.Clamp01(currentSpeed / preset.runSpeed);
 
-        firstPersonCamera.Lens.FieldOfView = Mathf.Lerp(firstPersonCamera.Lens.FieldOfView, targetFOV, preset.cameraFOVSmoothing * Time.deltaTime);
+            float targetFOV = Mathf.Lerp(preset.cameraWalkFOV, preset.cameraRunFOV, speedRatio);
+
+            firstPersonCamera.Lens.FieldOfView = Mathf.Lerp(firstPersonCamera.Lens.FieldOfView, targetFOV, preset.cameraFOVSmoothing * Time.deltaTime);
+        }
 
         // Camera tilt when strafing
         if (isRunning)
@@ -502,6 +580,22 @@ public class PlayerLocomotion : MonoBehaviour
 
         float targetTilt = -moveInput.x * maxTiltAngle;
         currentTilt = Mathf.Lerp(currentTilt, targetTilt, preset.tiltSmoothing * Time.deltaTime);
+    }
+
+    public void SetReadingLookTarget(Vector3 targetPosition, float lockAmount)
+    {
+        readingLookTarget = targetPosition;
+
+        hasReadingLookTarget = true;
+
+        readingLookLockAmount = Mathf.Clamp01(lockAmount);
+    }
+
+    public void ClearReadingLookTarget()
+    {
+        hasReadingLookTarget = false;
+
+        readingLookLockAmount = 0f;
     }
 
     private void OnPauseChanged(bool paused)

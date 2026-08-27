@@ -21,6 +21,8 @@ public class InputManager : MonoBehaviour
     [SerializeField] public bool isGamepad;
     [HideInInspector] public InputAction runAction;
     [HideInInspector] public InputAction _pauseOpenCloseAction;
+    [HideInInspector] public InputAction zoomAction;
+
 
     [Header("Required Components")]
     [SerializeField] PlayerInput _playerInput;
@@ -98,6 +100,11 @@ public class InputManager : MonoBehaviour
         currentInput.run = runRequested && isMoving;
     }
 
+    private void OnZoom()
+    {
+        currentInput.zoom = zoomAction.IsPressed();
+    }
+
     #endregion
 
     #region Unity Methods
@@ -121,6 +128,7 @@ public class InputManager : MonoBehaviour
 
         UpdateControlScheme();
         _pauseOpenCloseAction = _playerInput.actions["PauseOpenClose"];
+        zoomAction = _playerInput.actions["Zoom"];
     }
 
     private void OnEnable()
@@ -160,6 +168,7 @@ public class InputManager : MonoBehaviour
     private void Update()
     {
         OnRun();
+        OnZoom();
 
         // when pause button is pressed
         PauseOpenCloseInput = _pauseOpenCloseAction.WasPressedThisFrame();

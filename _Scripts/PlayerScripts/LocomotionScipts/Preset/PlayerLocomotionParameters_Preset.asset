@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6415e844b6083c149a9b0602ed687f81, type: 3}
   m_Name: PlayerLocomotionParameters_Preset
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLocomotionPreset
-  normalAcceleration: 6
-  runningAcceleration: 8
-  crouchAcceleration: 2
-  crouchSpeed: 0.85
-  walkSpeed: 1.4
-  runSpeed: 2.75
+  walkAcceleration: 4
+  walkDeceleration: 6
+  runningAcceleration: 6
+  runningDeceleration: 8
+  crouchAcceleration: 3
+  crouchDeceleration: 6
+  crouchSpeed: 0.8
+  walkSpeed: 1.3
+  runSpeed: 2.6
   mouseSensitivity: 0.5
   mouseMin: 0.01
   mouseMax: 0.19
@@ -26,6 +29,8 @@ MonoBehaviour:
   controllerMax: 2.4
   cameraWalkFOV: 55
   cameraRunFOV: 60
+  cameraZoomFOV: 45
+  cameraFOVChangeSpeed: 1.3
   cameraFOVSmoothing: 5
   pitchUpLimit: 75
   pitchDownLimit: 60

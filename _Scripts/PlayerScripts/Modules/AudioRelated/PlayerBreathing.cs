@@ -31,13 +31,20 @@ public class PlayerBreathing : MonoBehaviour
     {
         AudioClip selectedClip = null;
 
-        if (staminaSystem.playerStamina >= 60f)
+        if (staminaSystem.playerStamina >= 90f)
+        {
+            // No breathing sound
+            selectedClip = null;
+            targetAmplitude = 0f;
+            targetFrequency = 0f;
+        }
+        else if (staminaSystem.playerStamina >= 60f)
         {
             selectedClip = normalBreathing;
             targetAmplitude = 0.5f;
             targetFrequency = 0.5f;
         }
-        else if (staminaSystem.playerStamina >= 1f && staminaSystem.playerStamina <= 60f)
+        else if (staminaSystem.playerStamina >= 20f)
         {
             selectedClip = moderateBreathing;
             targetAmplitude = 0.6f;
@@ -54,7 +61,7 @@ public class PlayerBreathing : MonoBehaviour
         cameraNoise.AmplitudeGain = Mathf.Lerp(cameraNoise.AmplitudeGain, targetAmplitude, Time.deltaTime * smoothSpeed);
         cameraNoise.FrequencyGain = Mathf.Lerp(cameraNoise.FrequencyGain, targetFrequency, Time.deltaTime * smoothSpeed);
 
-        /// Only change clip if it’s actually different
+        // Only change clip if it’s actually different
         if (selectedClip != currentClip)
         {
             currentClip = selectedClip;
