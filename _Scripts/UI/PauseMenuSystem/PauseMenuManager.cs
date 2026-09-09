@@ -132,23 +132,88 @@ public class PauseMenuManager : MonoBehaviour
             StopCoroutine(sfxFadeRoutine);
         }
 
-        sfxFadeRoutine = StartCoroutine(FadeSFXRoutine(targetVolume));
+        sfxFadeRoutine = StartCoroutine(
+            FadeSFXRoutine(targetVolume)
+        );
     }
 
     private IEnumerator FadeSFXRoutine(float targetVolume)
     {
-        audioMixer.GetFloat("sfxHandle", out float startVolume);
+        audioMixer.GetFloat(
+            "sfxPlayerHandle",
+            out float playerStartVolume
+        );
+
+        audioMixer.GetFloat(
+            "sfxUserInterfaceHandle",
+            out float uiStartVolume
+        );
+
+        audioMixer.GetFloat(
+            "ambientVolume",
+            out float ambientStartVolume
+        );
 
         float elapsed = 0f;
+
         while (elapsed < sfxFadeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float volume = Mathf.Lerp(startVolume, targetVolume, elapsed / sfxFadeDuration);
-            audioMixer.SetFloat("sfxHandle", volume);
+
+            float t = elapsed / sfxFadeDuration;
+
+            float playerVolume = Mathf.Lerp(
+                playerStartVolume,
+                targetVolume,
+                t
+            );
+
+            float uiVolume = Mathf.Lerp(
+                uiStartVolume,
+                targetVolume,
+                t
+            );
+
+            float ambientVolume = Mathf.Lerp(
+                ambientStartVolume,
+                targetVolume,
+                t
+            );
+
+            audioMixer.SetFloat(
+                "sfxPlayerHandle",
+                playerVolume
+            );
+
+            audioMixer.SetFloat(
+                "sfxUserInterfaceHandle",
+                uiVolume
+            );
+
+            audioMixer.SetFloat(
+                "ambientVolume",
+                ambientVolume
+            );
+
             yield return null;
         }
 
-        audioMixer.SetFloat("sfxHandle", targetVolume);
+        audioMixer.SetFloat(
+            "sfxPlayerHandle",
+            targetVolume
+        );
+
+        audioMixer.SetFloat(
+            "sfxUserInterfaceHandle",
+            targetVolume
+        );
+
+        audioMixer.SetFloat(
+            "ambientVolume",
+            targetVolume
+        );
+
+        sfxFadeRoutine = null;
     }
 
     #endregion

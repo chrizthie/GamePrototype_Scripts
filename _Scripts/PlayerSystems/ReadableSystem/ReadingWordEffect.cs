@@ -16,6 +16,7 @@ public class ReadingWordEffect : MonoBehaviour
 
     [Header("Glyph Convergence")]
     [SerializeField] private float convergenceStartProgress = 0.55f;
+    public float ConvergenceStartProgress => convergenceStartProgress;
     [SerializeField] private float convergenceEndProgress = 0.7f;
     [SerializeField] private float extraGlyphFadeSpeed = 10f;
     [SerializeField] private float letterSpacing = 20f;

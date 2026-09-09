@@ -68,7 +68,7 @@ public class PlayerInteract : MonoBehaviour
             else
             {
                 // Normal Interactable
-                Interactable interactable = hitInfo.collider.GetComponent<Interactable>();
+                Interactable interactable = hitInfo.collider.GetComponentInParent<Interactable>();
 
                 if (interactable != null)
                 {

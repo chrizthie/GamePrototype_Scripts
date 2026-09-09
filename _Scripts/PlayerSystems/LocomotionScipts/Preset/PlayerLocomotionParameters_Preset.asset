@@ -19,8 +19,8 @@ MonoBehaviour:
   crouchAcceleration: 3
   crouchDeceleration: 6
   crouchSpeed: 0.8
-  walkSpeed: 1.3
-  runSpeed: 2.6
+  walkSpeed: 1.2
+  runSpeed: 2.4
   mouseSensitivity: 0.5
   mouseMin: 0.01
   mouseMax: 0.19
@@ -29,11 +29,11 @@ MonoBehaviour:
   controllerMax: 2.4
   cameraWalkFOV: 55
   cameraRunFOV: 60
-  cameraZoomFOV: 45
-  cameraFOVChangeSpeed: 1.3
+  cameraZoomFOV: 40
+  cameraFOVChangeSpeed: 1.7
   cameraFOVSmoothing: 5
   pitchUpLimit: 75
-  pitchDownLimit: 60
+  pitchDownLimit: 75
   walkTiltAngle: 1
   runTiltAngle: 2
   tiltSmoothing: 3

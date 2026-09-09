@@ -11,6 +11,13 @@ using UnityEngine.Windows;
 
 public class PlayerLocomotion : MonoBehaviour
 {
+    public enum LandingType
+    {
+        Soft,
+        Medium,
+        Hard
+    }
+
     [Header("Animator Movement")]
     public Vector2 movementBlendVector { get; private set; }
 
@@ -41,6 +48,11 @@ public class PlayerLocomotion : MonoBehaviour
     [SerializeField] private float crouchMomentumDamping = 0.8f;
     [SerializeField] private float sprintExitDragDuration = 0.18f;
     [SerializeField] private float sprintExitDragMultiplier = 1.35f;
+
+    [Header("Turning Feel")]
+    [SerializeField] private float turnAccelerationMultiplier = 2.5f;
+    [SerializeField] private float sharpTurnThreshold = 75f;
+    [SerializeField] private float sharpTurnMomentumRetention = 0.65f;
 
     private float sprintExitDragTimer;
 
@@ -116,6 +128,26 @@ public class PlayerLocomotion : MonoBehaviour
     private float gravityScale;
     public Vector3 currentVelocity { get; private set; }
     public float currentSpeed { get; private set; }
+
+    [Header("Landing Detection")]
+    public bool justLanded { get; private set; }
+    public float lastFallSpeed { get; private set; }
+    public float lastAirTime { get; private set; }
+
+    [Header("Landing Intensity")]
+    [SerializeField] private float softLandingSpeed = 8f;
+    [SerializeField] private float hardLandingSpeed = 14f;
+
+    [Header("Landing Lock")]
+    [SerializeField] private float softLandingLock = 0.05f;
+    [SerializeField] private float mediumLandingLock = 0.20f;
+    [SerializeField] private float hardLandingLock = 0.40f;
+
+    private float landingLockTimer;
+
+    private bool wasGrounded;
+    private float fallStartVelocity;
+
     #endregion
 
     #region Input Parameters
@@ -133,6 +165,7 @@ public class PlayerLocomotion : MonoBehaviour
     [SerializeField] CinemachineCamera firstPersonCamera;
     [SerializeField] CharacterController characterController;
     [SerializeField] Animator animator;
+    [SerializeField] private CameraMotion cameraMotion;
 
     [Header("Required Player Modules")]
     [SerializeField] StaminaSystem staminaSystem;
@@ -241,6 +274,14 @@ public class PlayerLocomotion : MonoBehaviour
         // detect crouch start
         justStartedCrouching = !wasCrouching && isCrouching;
         wasCrouching = isCrouching;
+
+        Debug.Log(
+            $"RunInput: {runInput} | " +
+            $"IsRunning: {isRunning} | " +
+            $"JustStarted: {justStartedRunning} | " +
+            $"Grounded: {isGrounded}"
+        );
+
     }
 
     private void MoveUpdate()
@@ -299,6 +340,25 @@ public class PlayerLocomotion : MonoBehaviour
 
         Vector3 targetVelocity = motion * targetMaxSpeed;
 
+        // ---------------------------------
+        // DIRECTION CHANGE HANDLING
+        // ---------------------------------
+
+        if (currentVelocity.sqrMagnitude > 0.01f &&
+            targetVelocity.sqrMagnitude > 0.01f)
+        {
+            float turnAngle = Vector3.Angle(
+                currentVelocity.normalized,
+                targetVelocity.normalized
+            );
+
+            // Reduce old-direction momentum on very sharp turns.
+            if (turnAngle >= sharpTurnThreshold)
+            {
+                currentVelocity *= sharpTurnMomentumRetention;
+            }
+        }
+
         // ACCEL / DECEL PER STATE
         float acceleration;
         float deceleration;
@@ -317,6 +377,28 @@ public class PlayerLocomotion : MonoBehaviour
         {
             acceleration = preset.walkAcceleration;
             deceleration = preset.walkDeceleration;
+        }
+
+        // Increase responsiveness when changing facing direction.
+        if (currentVelocity.sqrMagnitude > 0.01f &&
+            targetVelocity.sqrMagnitude > 0.01f)
+        {
+            float turnAngle = Vector3.Angle(
+                currentVelocity.normalized,
+                targetVelocity.normalized
+            );
+
+            float turnAmount = Mathf.InverseLerp(
+                0f,
+                180f,
+                turnAngle
+            );
+
+            acceleration *= Mathf.Lerp(
+                1f,
+                turnAccelerationMultiplier,
+                turnAmount
+            );
         }
 
         // weaker control in air
@@ -438,14 +520,92 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void PlayerLanding()
     {
-        AnimatorStateInfo stateInfo = currentAnimState;
+        justLanded = false;
 
-        landingLock = stateInfo.IsName("NormalLanding") || stateInfo.IsName("LandHarder");
+        bool currentlyGrounded = characterController.isGrounded;
 
-        if (landingLock)
+        // -----------------------------
+        // START FALL
+        // -----------------------------
+
+        if (wasGrounded && !currentlyGrounded)
         {
-            currentVelocity = Vector3.zero;
+            fallStartVelocity = verticalVelocity;
         }
+
+        // -----------------------------
+        // LANDING
+        // -----------------------------
+
+        if (!wasGrounded && currentlyGrounded)
+        {
+            justLanded = true;
+
+            lastAirTime = airTime;
+            lastFallSpeed = Mathf.Abs(verticalVelocity);
+
+            if (cameraMotion != null)
+            {
+                cameraMotion.AddLandingImpact(
+                    GetLandingIntensity()
+                );
+            }
+
+            airTime = 0f;
+            gravityScale = preset.gravityScale;
+
+            currentVelocity = Vector3.zero;
+
+            landingLockTimer = GetLandingLockTime();
+
+            Debug.Log(
+                $"LANDING | " +
+                $"Speed: {lastFallSpeed:F2} | " +
+                $"Type: {GetLandingType()} | " +
+                $"Intensity: {GetLandingIntensity():F2} | " +
+                $"Air Time: {lastAirTime:F2}"
+            );
+        }
+
+        wasGrounded = currentlyGrounded;
+    }
+
+    private float GetLandingLockTime()
+    {
+        switch (GetLandingType())
+        {
+            case LandingType.Soft:
+                return softLandingLock;
+
+            case LandingType.Medium:
+                return mediumLandingLock;
+
+            case LandingType.Hard:
+                return hardLandingLock;
+
+            default:
+                return 0f;
+        }
+    }
+
+    public LandingType GetLandingType()
+    {
+        if (lastFallSpeed < softLandingSpeed)
+            return LandingType.Soft;
+
+        if (lastFallSpeed < hardLandingSpeed)
+            return LandingType.Medium;
+
+        return LandingType.Hard;
+    }
+
+    public float GetLandingIntensity()
+    {
+        return Mathf.InverseLerp(
+            softLandingSpeed,
+            hardLandingSpeed,
+            lastFallSpeed
+        );
     }
 
     public void LookUpdate()
@@ -622,9 +782,17 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void Start()
     {
+        if (cameraMotion == null)
+        {
+            cameraMotion =
+                GetComponentInChildren<CameraMotion>();
+        }
+
         gravityScale = preset.gravityScale;
         idleToCrouchHash = Animator.StringToHash("Idle2Crouch");
         crouchToIdleHash = Animator.StringToHash("Crouch2Idle");
+
+        wasGrounded = characterController.isGrounded;
     }
 
     private void OnValidate()
@@ -645,19 +813,31 @@ public class PlayerLocomotion : MonoBehaviour
     private void Update()
     {
         movementSpeed = currentSpeed;
+
         ApplyInput(inputManager.CurrentInput);
 
-        currentAnimState = animator.GetCurrentAnimatorStateInfo(0);
-        
+        currentAnimState =
+            animator.GetCurrentAnimatorStateInfo(0);
+
         MovementFlags();
         UpdateMovementBlendVector();
         CheckOverhead();
-        PlayerLanding();
 
         if (canMove && !landingLock)
         {
             MoveUpdate();
         }
+
+        // Detect landing AFTER CharacterController.Move()
+        PlayerLanding();
+
+        landingLockTimer =
+            Mathf.Max(
+                landingLockTimer - Time.deltaTime,
+                0f
+            );
+
+        landingLock = landingLockTimer > 0f;
 
         Crouch();
         StandUp();

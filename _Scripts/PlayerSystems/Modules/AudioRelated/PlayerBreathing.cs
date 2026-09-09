@@ -15,8 +15,8 @@ public class PlayerBreathing : MonoBehaviour
 
     [Header("Noise Transition Smoothing")]
     [SerializeField] public float smoothSpeed = 5f;
-    private float targetAmplitude;
-    private float targetFrequency;
+    //private float targetAmplitude;
+    //private float targetFrequency;
 
     [Header("Required Components")]
     [SerializeField] StaminaSystem staminaSystem;
@@ -30,36 +30,38 @@ public class PlayerBreathing : MonoBehaviour
     private void UpdateBreathing()
     {
         AudioClip selectedClip = null;
-
-        if (staminaSystem.playerStamina >= 90f)
+        
+        
+        if (staminaSystem.playerStamina >= 95f)
         {
             // No breathing sound
             selectedClip = null;
-            targetAmplitude = 0f;
-            targetFrequency = 0f;
+            //targetAmplitude = 0f;
+            //targetFrequency = 0f;
         }
-        else if (staminaSystem.playerStamina >= 60f)
+        else if (staminaSystem.playerStamina >= 65f)
         {
             selectedClip = normalBreathing;
-            targetAmplitude = 0.5f;
-            targetFrequency = 0.5f;
+            //targetAmplitude = 0.5f;
+            //targetFrequency = 0.5f;
         }
-        else if (staminaSystem.playerStamina >= 20f)
+        else if (staminaSystem.playerStamina >= 25f)
         {
             selectedClip = moderateBreathing;
-            targetAmplitude = 0.6f;
-            targetFrequency = 0.6f;
+            //targetAmplitude = 0.6f;
+            //targetFrequency = 0.6f;
         }
         else
         {
             selectedClip = heavyBreathing;
-            targetAmplitude = 0.7f;
-            targetFrequency = 0.7f;
+            //targetAmplitude = 0.7f;
+            //targetFrequency = 0.7f;
         }
+       
 
         // Smoothly move current toward target
-        cameraNoise.AmplitudeGain = Mathf.Lerp(cameraNoise.AmplitudeGain, targetAmplitude, Time.deltaTime * smoothSpeed);
-        cameraNoise.FrequencyGain = Mathf.Lerp(cameraNoise.FrequencyGain, targetFrequency, Time.deltaTime * smoothSpeed);
+        //cameraNoise.AmplitudeGain = Mathf.Lerp(cameraNoise.AmplitudeGain, targetAmplitude, Time.deltaTime * smoothSpeed);
+        //cameraNoise.FrequencyGain = Mathf.Lerp(cameraNoise.FrequencyGain, targetFrequency, Time.deltaTime * smoothSpeed);
 
         // Only change clip if it’s actually different
         if (selectedClip != currentClip)

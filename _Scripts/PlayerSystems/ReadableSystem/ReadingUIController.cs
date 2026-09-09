@@ -29,6 +29,16 @@ public class ReadingUIController : MonoBehaviour
         titleText.text = readable.Title;
         bodyText.text = readable.BodyText;
 
+        if (readable.TitleFont != null)
+        {
+            titleText.font = readable.TitleFont;
+        }
+
+        if (readable.BodyFont != null)
+        {
+            bodyText.font = readable.BodyFont;
+        }
+
         readingContent.SetActive(true);
 
         StartFade(1f, fadeInSpeed);

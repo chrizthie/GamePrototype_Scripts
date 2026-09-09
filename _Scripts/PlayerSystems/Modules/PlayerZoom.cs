@@ -31,25 +31,38 @@ public class PlayerZoom : MonoBehaviour
             FindActiveVolume();
         }
 
-        // Don't apply manual zoom while running
-        if (InputManager.instance.CurrentInput.run)
-        {
-            return;
-        }
-
+        bool isRunning = InputManager.instance.CurrentInput.run;
         bool isZooming = InputManager.instance.CurrentInput.zoom;
 
-        // FOV
-        targetFOV = isZooming ? preset.cameraZoomFOV : preset.cameraWalkFOV;
+        // Running overrides zoom
+        if (isRunning)
+        {
+            isZooming = false;
+        }
 
-        playerCamera.Lens.FieldOfView = Mathf.Lerp(playerCamera.Lens.FieldOfView, targetFOV, preset.cameraFOVChangeSpeed * Time.deltaTime);
+        // FOV
+        targetFOV = isZooming
+            ? preset.cameraZoomFOV
+            : preset.cameraWalkFOV;
+
+        playerCamera.Lens.FieldOfView = Mathf.Lerp(
+            playerCamera.Lens.FieldOfView,
+            targetFOV,
+            preset.cameraFOVChangeSpeed * Time.deltaTime
+        );
 
         // Vignette
         if (vignette != null)
         {
-            float targetVignette = isZooming ? zoomVignette : normalVignette;
+            float targetVignette = isZooming
+                ? zoomVignette
+                : normalVignette;
 
-            vignette.intensity.value = Mathf.Lerp(vignette.intensity.value, targetVignette, preset.cameraFOVChangeSpeed * Time.deltaTime);
+            vignette.intensity.value = Mathf.Lerp(
+                vignette.intensity.value,
+                targetVignette,
+                preset.cameraFOVChangeSpeed * Time.deltaTime
+            );
         }
     }
 

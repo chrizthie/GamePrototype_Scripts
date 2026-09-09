@@ -25,8 +25,6 @@ public class FootstepsHandler : MonoBehaviour
     [SerializeField] private AudioSource footstepAudioSource;
     [SerializeField] private FootstepsSwapper footstepsSwapper;
 
-    private bool wasGrounded;
-
     private void Awake()
     {
         if (characterController == null)
@@ -94,16 +92,19 @@ public class FootstepsHandler : MonoBehaviour
 
     private void HandleLanding()
     {
-        bool isGrounded = characterController.isGrounded;
-        bool justLanded = !wasGrounded && isGrounded;
+        if (!playerLocomotion.justLanded)
+            return;
 
-        if (justLanded && playerLocomotion.airTime > 0.4f)
-        {
-            PlayLandingAudio();
-            footstepLockTimer = postLandingStepDelay;
-        }
+        PlayerLocomotion.LandingType landingType =
+            playerLocomotion.GetLandingType();
 
-        wasGrounded = isGrounded;
+        // Soft landings do not trigger a landing sound.
+        if (landingType == PlayerLocomotion.LandingType.Soft)
+            return;
+
+        PlayLandingAudio();
+
+        footstepLockTimer = postLandingStepDelay;
     }
 
     public void PlayFootStepAudio()

@@ -16,6 +16,8 @@ public class ReadingController : MonoBehaviour
     private string selectedWord;
     private float cooldownTimer;
     private Vector3 readingLookTarget;
+    private bool glyphChaosAudioPlayed;
+    private bool glyphConvergenceAudioPlayed;
 
     [Header("Reading Cooldown")]
     [SerializeField] private float readingCooldown = 0.5f;
@@ -30,6 +32,7 @@ public class ReadingController : MonoBehaviour
     [SerializeField] private ReadingWordEffect readingWordEffect;
     [SerializeField] private ReadingUIController readingUIController;
     [SerializeField] private PlayerLocomotion playerLocomotion;
+    [SerializeField] private ReadingAudioController readingAudioController;
 
     private void Update()
     {
@@ -120,6 +123,36 @@ public class ReadingController : MonoBehaviour
 
         selectedWord = GetSelectedWord(activeReadable);
 
+        // If this readable uses already-read behavior
+        // and has already been read, skip the glyph transition.
+        if (activeReadable.AlreadyReadBehavior &&
+            activeReadable.HasBeenRead)
+        {
+            readingUIController.Show(activeReadable);
+
+            readingAudioController.PlayState(
+                activeReadable,
+                ReadableAudioState.ReadingOpen
+            );
+
+            currentState = ReadingState.Reading;
+
+            Debug.Log(
+                "Already read. Skipping reading transition."
+            );
+
+            return;
+        }
+
+        // First read or repeatable readable
+        readingAudioController.PlayState(
+            activeReadable,
+            ReadableAudioState.TransitionStart
+        );
+
+        glyphChaosAudioPlayed = false;
+        glyphConvergenceAudioPlayed = false;
+
         readingWordEffect.StartEffect(selectedWord);
 
         currentState = ReadingState.Transitioning;
@@ -200,12 +233,40 @@ public class ReadingController : MonoBehaviour
             preset.cameraFOVChangeSpeed * Time.deltaTime
         );
 
-        readingWordEffect.UpdateEffect(transitionProgress);
+        // Glyph chaos
+        if (!glyphChaosAudioPlayed &&
+            transitionProgress >= 0.1f)
+        {
+            readingAudioController.PlayState(
+                activeReadable,
+                ReadableAudioState.GlyphChaos
+            );
 
-        // Gradually lock the camera toward the readable
-        playerLocomotion.SetReadingLookTarget(readingLookTarget, transitionProgress);
+            glyphChaosAudioPlayed = true;
+        }
 
-        Debug.Log("Transition Progress: " + transitionProgress);
+        // Glyph convergence
+        if (!glyphConvergenceAudioPlayed &&
+            transitionProgress >=
+            readingWordEffect.ConvergenceStartProgress)
+        {
+            readingAudioController.PlayState(
+                activeReadable,
+                ReadableAudioState.GlyphConvergence
+            );
+
+            glyphConvergenceAudioPlayed = true;
+        }
+
+        readingWordEffect.UpdateEffect(
+            transitionProgress
+        );
+
+        // Gradually lock camera to readable
+        playerLocomotion.SetReadingLookTarget(
+            readingLookTarget,
+            transitionProgress
+        );
 
         if (transitionProgress >= 1f)
         {
@@ -215,6 +276,16 @@ public class ReadingController : MonoBehaviour
 
             readingUIController.Show(activeReadable);
 
+            readingAudioController.PlayState(
+                activeReadable,
+                ReadableAudioState.ReadingOpen
+            );
+
+            if (activeReadable.AlreadyReadBehavior)
+            {
+                activeReadable.MarkAsRead();
+            }
+
             currentState = ReadingState.Reading;
         }
     }
@@ -223,9 +294,12 @@ public class ReadingController : MonoBehaviour
     {
         currentState = ReadingState.Exiting;
 
-        playerLocomotion.ClearReadingLookTarget();
-
         cooldownTimer = readingCooldown;
+
+        readingAudioController.PlayState(
+            activeReadable,
+            ReadableAudioState.ReadingClose
+        );
 
         // Restore normal camera control
         playerLocomotion.ClearReadingLookTarget();
